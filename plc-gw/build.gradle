@@ -1,0 +1,56 @@
+group 'com.tiza'
+version '1.0'
+
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+//    compile project(':dyl-plugin')
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
+// 打包jar 主函数
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.tiza.gw.Main'
+        )
+    }
+
+    // '胖'打包（包含所有jar）
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+    }
+}
+
+shadowJar {
+    baseName = 'plc-gw'
+    classifier = null
+    version = null
+    mergeServiceFiles('META-INF/spring.*')
+}
