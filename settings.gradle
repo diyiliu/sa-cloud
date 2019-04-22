@@ -1,5 +1,5 @@
 rootProject.name = 'sa-cloud'
 // 外部依赖
-//includeFlat 'dyl-plugin'
+includeFlat 'dyl-plugin'
 include 'plc-gw'
 
