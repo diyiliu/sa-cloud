@@ -25,8 +25,6 @@ import redis.clients.jedis.JedisPoolConfig;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -79,25 +77,24 @@ public class SpringConfig {
 
     @Bean(initMethod = "init")
     public KafkaUtil kafkaUtil() {
-        Map kafkaProp = new HashMap();
-        // 消息传递到broker时的序列化方式
-        kafkaProp.put("serializer.class", StringEncoder.class.getName());
-        // 0 不获取反馈(消息有可能传输失败)
-        // 1 获取消息传递给leader后反馈(其他副本有可能接受消息失败)
-        // -1 所有in-sync replicas接受到消息时的反馈
-        kafkaProp.put("request.required.acks", "1");
-        // 内部发送数据是异步还是同步 sync：同步(来一条数据提交一条不缓存), 默认 async：异步
-        kafkaProp.put("producer.type", "async");
-        // 重试次数
-        kafkaProp.put("message.send.max.retries", "3");
-
-
         String brokerList = environment.getProperty("kafka.broker-list");
         String topic = environment.getProperty("kafka.raw-topic");
 
         Properties props = new Properties();
         props.put("metadata.broker.list", brokerList);
-        props.putAll(kafkaProp);
+
+        // 消息传递到broker时的序列化方式
+        props.put("serializer.class", StringEncoder.class.getName());
+        // acks = 0：表示producer无需等待server端的应答消息
+        // acks = 1：表示接收该消息记录的分区leader将消息记录写入到本地log文件，就返回Acknowledgement，告知producer本次发送已完成，而无需等待其他follower分区的确认。
+        // acks = all：表示消息记录只有得到分区leader以及其他分区副本同步结点队列（ISR）中的分区follower的确认之后，才能回复acknowlegement，告知producer本次发送已完成。
+        // acks = -1：等同于acks = all。
+        props.put("request.required.acks", "1");
+        // 内部发送数据是异步还是同步 sync：同步(来一条数据提交一条不缓存), 默认 async：异步
+        props.put("producer.type", "async");
+        // 重试次数
+        props.put("message.send.max.retries", "3");
+
         Producer<String, String> producer = new Producer(new ProducerConfig(props));
 
         return new KafkaUtil(producer, topic);
