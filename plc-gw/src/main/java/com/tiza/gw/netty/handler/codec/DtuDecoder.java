@@ -106,8 +106,8 @@ public class DtuDecoder extends ByteToMessageDecoder {
                 ctx.close();
                 return;
             }
-            processHandler.toKafka(deviceId, bytes, 1);
 
+            processHandler.toKafka(deviceId, bytes, 1);
             out.add(Unpooled.copiedBuffer(content));
         }
     }

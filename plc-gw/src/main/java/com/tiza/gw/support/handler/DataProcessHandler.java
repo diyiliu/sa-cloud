@@ -6,19 +6,17 @@ import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
 import com.tiza.gw.support.model.KafkaMsg;
 import com.tiza.gw.support.model.SinglePool;
-import com.tiza.gw.support.model.SubMsg;
 import com.tiza.gw.support.util.KafkaUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Description: DataProcessHandler
@@ -28,9 +26,7 @@ import java.util.concurrent.*;
 
 @Slf4j
 @Service
-public class DataProcessHandler implements InitializingBean {
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
+public class DataProcessHandler{
     /**
      * 设备消息队列
      **/
@@ -104,22 +100,6 @@ public class DataProcessHandler implements InitializingBean {
             KafkaUtil.send(new KafkaMsg(deviceId, JacksonUtil.toJson(map)));
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        executor.scheduleWithFixedDelay(() -> {
-
-
-        }, 1, 5, TimeUnit.SECONDS);
-    }
-
-    public void clean(Queue<SubMsg> pool) {
-        while (!pool.isEmpty()) {
-            SubMsg msg = pool.poll();
-
-
         }
     }
 }
