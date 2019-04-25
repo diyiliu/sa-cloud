@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     compile project(':dyl-plugin')
-
+    
     compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
     compile (group: 'org.apache.kafka', name: 'kafka_2.10', version: '0.8.2.2'){
         exclude group: 'org.slf4j'
@@ -54,7 +54,7 @@ buildscript {
 }
 
 shadowJar {
-    baseName = 'plc-gw'
+    baseName = 'sa-gw'
     classifier = null
     version = null
     mergeServiceFiles('META-INF/spring.*')

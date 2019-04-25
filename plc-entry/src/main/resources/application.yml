@@ -1,0 +1,20 @@
+# https://docs.spring.io/spring-boot/docs/2.1.0.RELEASE/reference/htmlsingle/#common-application-properties
+# SPRING
+spring:
+  profiles:
+    active: dev
+
+  # JSON
+  jackson:
+    locale: zh_CN
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  jpa:
+    hibernate:
+     naming:
+       physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+# LOGGING
+logging:
+  config: 'classpath:logback.xml'
