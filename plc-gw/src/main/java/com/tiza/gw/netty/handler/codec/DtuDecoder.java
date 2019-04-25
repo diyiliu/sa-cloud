@@ -1,9 +1,9 @@
 package com.tiza.gw.netty.handler.codec;
 
-import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.SpringUtil;
 import com.tiza.gw.support.config.SaConstant;
+import com.tiza.gw.support.handler.DataProcessHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -32,8 +32,8 @@ public class DtuDecoder extends ByteToMessageDecoder {
 
         // 绑定数据
         Attribute attribute = ctx.channel().attr(AttributeKey.valueOf(SaConstant.NETTY_DEVICE_ID));
-        // 下发缓存
-        ICache sendCache = SpringUtil.getBean("sendCacheProvider");
+        // 数据处理类
+        DataProcessHandler processHandler = SpringUtil.getBean("dataProcessHandler");
 
         in.markReaderIndex();
         byte b1 = in.readByte();
@@ -49,10 +49,10 @@ public class DtuDecoder extends ByteToMessageDecoder {
             byte[] bytes = Unpooled.copiedBuffer(new byte[]{b1, b2, b2}, content).array();
 
             if (0x40 == b1 || 0x24 == b1) {
-                if (register(deviceId, attribute, ctx)) {
-
-                }
+                attribute.set(deviceId);
+                processHandler.online(deviceId, ctx);
             }
+            processHandler.toKafka(deviceId, bytes, 1);
         } else {
             deviceId = (String) attribute.get();
             if (deviceId == null) {
@@ -66,11 +66,6 @@ public class DtuDecoder extends ByteToMessageDecoder {
             int site = in.readByte();
             // 功能码
             int code = in.readByte();
-            if (!sendCache.containsKey(deviceId)) {
-                log.error("数据异常, 找不到下行数据与之对应。");
-                ctx.close();
-                return;
-            }
 
             byte[] content;
             switch (code) {
@@ -111,23 +106,9 @@ public class DtuDecoder extends ByteToMessageDecoder {
                 ctx.close();
                 return;
             }
+            processHandler.toKafka(deviceId, bytes, 1);
 
             out.add(Unpooled.copiedBuffer(content));
         }
-    }
-
-    /**
-     * 设备注册
-     *
-     * @param deviceId
-     * @param attribute
-     * @param context
-     */
-    private boolean register(String deviceId, Attribute attribute, ChannelHandlerContext context) {
-
-        log.warn("设备[{}]不存在, 断开连接!", deviceId);
-        context.close();
-
-        return false;
     }
 }

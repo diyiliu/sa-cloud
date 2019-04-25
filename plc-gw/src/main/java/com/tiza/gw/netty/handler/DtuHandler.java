@@ -1,7 +1,8 @@
 package com.tiza.gw.netty.handler;
 
+import com.diyiliu.plugin.util.SpringUtil;
 import com.tiza.gw.support.config.SaConstant;
-import io.netty.buffer.ByteBuf;
+import com.tiza.gw.support.handler.DataProcessHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -23,11 +24,13 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
 
     private Attribute attribute;
 
+    private DataProcessHandler processHandler;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         log.info("建立连接...");
         attribute = ctx.channel().attr(AttributeKey.valueOf(SaConstant.NETTY_DEVICE_ID));
+        processHandler = SpringUtil.getBean("dataProcessHandler");
 
         // 断开连接
         ctx.channel().closeFuture().addListener(
@@ -35,7 +38,7 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
                     String deviceId = (String) attribute.get();
                     if (StringUtils.isNotEmpty(deviceId)) {
                         log.info("设备[{}]断开连接...", deviceId);
-
+                        processHandler.offline(deviceId);
                     }
                 }
         );
@@ -43,15 +46,6 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        String deviceId = (String) attribute.get();
-        ByteBuf byteBuf = (ByteBuf) msg;
-        int address = byteBuf.readUnsignedByte();
-        int code = byteBuf.readUnsignedByte();
-
-
-        int length = byteBuf.readUnsignedByte();
-        byte[] bytes = new byte[length];
-        byteBuf.readBytes(bytes);
 
     }
 
@@ -71,12 +65,14 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
             IdleStateEvent event = (IdleStateEvent) evt;
 
             if (IdleState.READER_IDLE == event.state()) {
-                //log.info("读超时(5s)[{}]..", deviceId);
-
+                //log.info("读超时..");
             } else if (IdleState.WRITER_IDLE == event.state()) {
                 //log.info("写超时...");
             } else if (IdleState.ALL_IDLE == event.state()) {
+                if (StringUtils.isNotEmpty(deviceId)){
 
+                    processHandler.idle(deviceId);
+                }
             }
         }
     }

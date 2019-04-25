@@ -1,7 +1,9 @@
 package com.tiza.gw.netty.handler.codec;
 
 import com.diyiliu.plugin.util.CommonUtil;
+import com.diyiliu.plugin.util.SpringUtil;
 import com.tiza.gw.support.config.SaConstant;
+import com.tiza.gw.support.handler.DataProcessHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -52,8 +54,9 @@ public class DtuEncoder extends MessageToByteEncoder {
         String deviceId = (String) attribute.get();
 
         if (StringUtils.isNotEmpty(deviceId)){
-//            KafkaClient kafkaClient = SpringUtil.getBean("kafkaClient");
-//            kafkaClient.toKafka(deviceId, bytes, 2);
+            // 数据处理类
+            DataProcessHandler processHandler = SpringUtil.getBean("dataProcessHandler");
+            processHandler.toKafka(deviceId, bytes, 2);
         }
     }
 }
