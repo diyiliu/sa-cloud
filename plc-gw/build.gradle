@@ -23,7 +23,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
-
 // 打包jar 主函数
 jar {
     manifest {
