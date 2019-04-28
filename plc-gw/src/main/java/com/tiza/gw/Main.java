@@ -1,7 +1,7 @@
 package com.tiza.gw;
 
 import com.diyiliu.plugin.util.SpringUtil;
-import com.tiza.gw.support.config.SpringConfig;
+import com.tiza.gw.support.config.GwConfig;
 
 /**
  * Description: Main
@@ -12,6 +12,6 @@ public class Main {
 
     public static void main(String[] args) {
 
-        SpringUtil.init(SpringConfig.class);
+        SpringUtil.init(GwConfig.class);
     }
 }

@@ -1,6 +1,6 @@
-package com.tiza.gw.support.util;
+package com.tiza.air.cluster;
 
-import com.tiza.gw.support.model.KafkaMsg;
+import com.tiza.air.model.KafkaMsg;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 
@@ -40,7 +40,7 @@ public class KafkaUtil {
 
                 producer.send(new KeyedMessage(topic, data.getKey(), data.getValue()));
             }
-        }, 10, 2, TimeUnit.SECONDS);
+        }, 2, 10, TimeUnit.SECONDS);
     }
 
     public void setTopic(String topic) {

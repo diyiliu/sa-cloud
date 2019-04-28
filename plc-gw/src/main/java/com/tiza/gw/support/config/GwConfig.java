@@ -3,9 +3,9 @@ package com.tiza.gw.support.config;
 import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.cache.ram.RamCacheProvider;
 import com.diyiliu.plugin.util.SpringUtil;
+import com.tiza.air.cluster.KafkaUtil;
 import com.tiza.gw.netty.server.DtuServer;
 import com.tiza.gw.support.listener.RedisMsgListener;
-import com.tiza.gw.support.util.KafkaUtil;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import kafka.serializer.StringEncoder;
@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Description: SpringConfig
+ * Description: GwConfig
  * Author: DIYILIU
  * Update: 2019-04-18 10:54
  */
@@ -36,7 +36,8 @@ import java.util.Properties;
 @Configuration
 @ComponentScan("com.tiza.gw")
 @PropertySource("classpath:config.properties")
-public class SpringConfig {
+public class GwConfig {
+    public final static String NETTY_DEVICE_ID = "DTU-ID";
 
     @Resource
     private Environment environment;
@@ -90,8 +91,8 @@ public class SpringConfig {
         // acks = all：表示消息记录只有得到分区leader以及其他分区副本同步结点队列（ISR）中的分区follower的确认之后，才能回复acknowlegement，告知producer本次发送已完成。
         // acks = -1：等同于acks = all。
         props.put("request.required.acks", "1");
-        // 内部发送数据是异步还是同步 sync：同步(来一条数据提交一条不缓存), 默认 async：异步
-        props.put("producer.type", "async");
+        // sync：同步(来一条数据提交一条不缓存), 默认 async：异步
+        props.put("producer.type", "sync");
         // 重试次数
         props.put("message.send.max.retries", "3");
 

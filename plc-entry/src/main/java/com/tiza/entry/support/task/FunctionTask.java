@@ -36,7 +36,7 @@ public class FunctionTask implements ITask {
     private ICache writeFnCacheProvider;
 
     @Resource
-    private ICache timerCacheProvider;
+    private ICache queryGroupCache;
 
     @Scheduled(fixedRate = 15 * 60 * 1000, initialDelay = 5 * 1000)
     public void execute() {
@@ -66,12 +66,12 @@ public class FunctionTask implements ITask {
                 queryMap.put(fnCode, queryFrames);
             }
 
-            timerCacheProvider.put(version, queryMap);
+            queryGroupCache.put(version, queryMap);
             tempKeys.add(version);
         });
 
         // 删除过期功能集
-        CommonUtil.refreshCache(fnSet, tempKeys, timerCacheProvider);
+        CommonUtil.refreshCache(fnSet, tempKeys, queryGroupCache);
     }
 
     public void refresh(List<PointInfo> infoList, ICache readFnCache, ICache writeFnCache) {

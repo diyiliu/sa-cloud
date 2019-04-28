@@ -1,7 +1,6 @@
 # WEB PROPERTIES
 server:
   port: 5008
-  context-path: '/'
 
 # SPRING
 spring:
@@ -15,3 +14,21 @@ spring:
 
   jpa:
     show-sql: true
+
+
+kafka:
+  broker-list: tcloud-161:9092,tcloud-162:9092,tcloud-163:9092
+  raw-topic: shangair_rawdata
+  data-topic: shangair_metrics
+
+hbase:
+  zk-quorum: 192.168.1.161,192.168.1.162,192.168.1.163
+  zk-port: 2181
+  data-table: tcloud:shangair_metrics
+
+redis:
+  host: 192.168.1.156
+  port: 6379
+  password:
+  database: 0
+  channel: sa_channel

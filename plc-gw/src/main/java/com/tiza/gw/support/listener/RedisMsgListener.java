@@ -2,9 +2,9 @@ package com.tiza.gw.support.listener;
 
 import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
+import com.tiza.air.model.SubMsg;
 import com.tiza.gw.support.handler.DataProcessHandler;
 import com.tiza.gw.support.model.SinglePool;
-import com.tiza.gw.support.model.SubMsg;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;

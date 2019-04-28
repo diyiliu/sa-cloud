@@ -1,4 +1,4 @@
-package com.tiza.gw.support.model;
+package com.tiza.air.model;
 
 /**
  * Description: KafkaMsg

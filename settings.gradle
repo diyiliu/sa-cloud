@@ -3,4 +3,5 @@ rootProject.name = 'sa-cloud'
 includeFlat 'dyl-plugin'
 include 'plc-gw'
 include 'plc-entry'
+include 'plc-air'
 

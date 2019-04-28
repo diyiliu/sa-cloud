@@ -1,7 +1,7 @@
 package com.tiza.gw.netty.handler;
 
 import com.diyiliu.plugin.util.SpringUtil;
-import com.tiza.gw.support.config.SaConstant;
+import com.tiza.gw.support.config.GwConfig;
 import com.tiza.gw.support.handler.DataProcessHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,7 +29,7 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         log.info("建立连接...");
-        attribute = ctx.channel().attr(AttributeKey.valueOf(SaConstant.NETTY_DEVICE_ID));
+        attribute = ctx.channel().attr(AttributeKey.valueOf(GwConfig.NETTY_DEVICE_ID));
         processHandler = SpringUtil.getBean("dataProcessHandler");
 
         // 断开连接
@@ -58,7 +58,7 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        attribute = ctx.channel().attr(AttributeKey.valueOf(SaConstant.NETTY_DEVICE_ID));
+        attribute = ctx.channel().attr(AttributeKey.valueOf(GwConfig.NETTY_DEVICE_ID));
         String deviceId = (String) attribute.get();
 
         if (evt instanceof IdleStateEvent) {

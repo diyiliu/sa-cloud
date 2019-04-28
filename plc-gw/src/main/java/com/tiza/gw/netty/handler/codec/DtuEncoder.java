@@ -2,7 +2,7 @@ package com.tiza.gw.netty.handler.codec;
 
 import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.SpringUtil;
-import com.tiza.gw.support.config.SaConstant;
+import com.tiza.gw.support.config.GwConfig;
 import com.tiza.gw.support.handler.DataProcessHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -50,7 +50,7 @@ public class DtuEncoder extends MessageToByteEncoder {
      * @param bytes
      */
     private void toRecord(ChannelHandlerContext context, byte[] bytes) {
-        Attribute attribute = context.channel().attr(AttributeKey.valueOf(SaConstant.NETTY_DEVICE_ID));
+        Attribute attribute = context.channel().attr(AttributeKey.valueOf(GwConfig.NETTY_DEVICE_ID));
         String deviceId = (String) attribute.get();
 
         if (StringUtils.isNotEmpty(deviceId)){
