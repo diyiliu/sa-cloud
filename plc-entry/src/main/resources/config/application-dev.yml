@@ -13,16 +13,17 @@ spring:
     password: 123456
 
   jpa:
-    show-sql: true
+    show-sql: false
 
 
 kafka:
-  broker-list: tcloud-161:9092,tcloud-162:9092,tcloud-163:9092
+  broker-list: xg153:9092,xg154:9092,xg155:9092
+  zk-connect: xg153:2181,xg154:2181,xg155:2181
   raw-topic: shangair_rawdata
   data-topic: shangair_metrics
 
 hbase:
-  zk-quorum: 192.168.1.161,192.168.1.162,192.168.1.163
+  zk-quorum: 192.168.1.153,192.168.1.154,192.168.1.155
   zk-port: 2181
   data-table: tcloud:shangair_metrics
 

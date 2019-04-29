@@ -35,7 +35,6 @@ import java.util.Properties;
 @EnableConfigurationProperties({KafkaProperties.class, HBaseProperties.class, RedisProperties.class})
 public class EntryConfig {
 
-
     @Autowired
     private KafkaProperties kafkaProperties;
 
@@ -48,13 +47,13 @@ public class EntryConfig {
 
     @Bean(initMethod = "init")
     public DtuDataProcess dataProcess(){
-        String zkConnect = kafkaProperties.getBrokerList();
+        String zkConnect = kafkaProperties.getZkConnect();
         String topic = kafkaProperties.getRawTopic();
 
         Properties props = new Properties();
         props.put("zookeeper.connect", zkConnect);
         // 指定消费组名
-        props.put("group.id", "t30");
+        props.put("group.id", "sa");
         props.put("zookeeper.session.timeout.ms", "400");
         props.put("zookeeper.sync.time.ms", "200");
         props.put("auto.commit.interval.ms", "1000");

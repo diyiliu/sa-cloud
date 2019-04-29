@@ -1,7 +1,6 @@
 package com.tiza.entry.support.config.properties;
 
 import lombok.Data;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -20,5 +19,5 @@ public class HBaseProperties {
 
     private String dataTable;
 
-    private byte[] family = Bytes.toBytes("1");
+//    private byte[] family = Bytes.toBytes("1");
 }

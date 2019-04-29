@@ -22,7 +22,9 @@ import redis.clients.jedis.JedisPool;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Description: SenderTask
@@ -69,7 +71,6 @@ public class SenderTask implements ITask {
 
     @Scheduled(fixedRate = 10 * 1000, initialDelay = 5 * 1000)
     public void execute() {
-
         Set set = onlineCacheProvider.getKeys();
         for (Iterator iterator = set.iterator(); iterator.hasNext(); ) {
             String deviceId = (String) iterator.next();
@@ -90,8 +91,6 @@ public class SenderTask implements ITask {
                 }
 
                 for (QueryFrame frame : frameList) {
-                    // String qKey = frame.getSite() + ":" + frame.getCode() + ":" + frame.getStart();
-                    // long frequency = frame.getPointUnits().get(0).getFrequency();
                     SendMsg msg = buildMsg(deviceId, frame);
                     toSend(msg);
                 }
@@ -105,7 +104,7 @@ public class SenderTask implements ITask {
 
         int site = queryFrame.getSite();
         int code = queryFrame.getCode();
-        int star = queryFrame.getStart();
+        int start = queryFrame.getStart();
         int count = queryFrame.getCount().get();
 
         List<PointUnit> unitList = queryFrame.getPointUnits();
@@ -113,22 +112,28 @@ public class SenderTask implements ITask {
             count = unitList.get(0).getPoints().length;
         }
 
+        SendMsg sendMsg = produceMsg(site, code, start, count);
+        sendMsg.setDeviceId(deviceId);
+        // 0: 查询; 1: 设置
+        sendMsg.setType(0);
+        sendMsg.setUnitList(unitList);
+
+        return sendMsg;
+    }
+
+    public SendMsg produceMsg(int site, int code, int start, int count){
         ByteBuf byteBuf = Unpooled.buffer(6);
         byteBuf.writeByte(site);
         byteBuf.writeByte(code);
-        byteBuf.writeShort(star);
+        byteBuf.writeShort(start);
         byteBuf.writeShort(count);
         byte[] bytes = byteBuf.array();
 
-        String key = site + ":" + code + ":" + star;
+        String key = site + ":" + code + ":" + start + ":" + count;
         SendMsg sendMsg = new SendMsg();
-        sendMsg.setDeviceId(deviceId);
         sendMsg.setCmd(code);
         sendMsg.setBytes(bytes);
-        // 0: 查询; 1: 设置
-        sendMsg.setType(0);
         sendMsg.setKey(key);
-        sendMsg.setUnitList(unitList);
 
         return sendMsg;
     }
@@ -188,7 +193,7 @@ public class SenderTask implements ITask {
                         }
 
                         JedisPool jedisPool = redisUtil.getPool();
-                        try (Jedis jedis = jedisPool.getResource()){
+                        try (Jedis jedis = jedisPool.getResource()) {
                             SubMsg subMsg = new SubMsg();
                             subMsg.setDevice(deviceId);
                             subMsg.setKey(key);
@@ -196,7 +201,9 @@ public class SenderTask implements ITask {
                             subMsg.setData(CommonUtil.bytesToStr(msg.getBytes()));
                             subMsg.setTime(System.currentTimeMillis());
 
-                            jedis.publish(pubChannel, JacksonUtil.toJson(subMsg));
+                            String dataJson = JacksonUtil.toJson(subMsg);
+                            jedis.publish(pubChannel, dataJson);
+                            log.info("发布 Redis: [{}]", dataJson);
                         }
 
                         // 参数设置

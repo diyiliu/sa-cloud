@@ -40,7 +40,7 @@ public class FunctionTask implements ITask {
 
     @Scheduled(fixedRate = 15 * 60 * 1000, initialDelay = 5 * 1000)
     public void execute() {
-        log.info("刷新功能集列表...");
+        log.info("刷新功能集列表 ...");
         try {
             List<PointInfo> infoList = pointInfoJpa.findAll(Sort.by(new String[]{"versionId", "siteId", "address", "position"}));
 

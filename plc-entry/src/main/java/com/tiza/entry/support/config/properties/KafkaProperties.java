@@ -15,6 +15,8 @@ public class KafkaProperties {
 
     private String brokerList;
 
+    private String zkConnect;
+
     private String rawTopic;
 
     private String dataTopic;

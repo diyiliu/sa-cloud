@@ -21,7 +21,7 @@ import java.util.Set;
 
 /**
  * 当日运行时长
- *
+ * <p>
  * Description: DailyRunTask
  * Author: DIYILIU
  * Update: 2019-04-28 14:54
@@ -42,8 +42,9 @@ public class DailyRunTask implements ITask {
 
     @Scheduled(cron = "0 30 1 * * ?")
     public void execute() {
-        Calendar today = Calendar.getInstance();
+        log.info("工作时长统计 ... ");
 
+        Calendar today = Calendar.getInstance();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(0);
         calendar.set(Calendar.YEAR, today.get(Calendar.YEAR));

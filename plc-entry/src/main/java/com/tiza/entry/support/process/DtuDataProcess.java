@@ -86,6 +86,7 @@ public class DtuDataProcess implements Runnable {
 
                     // 心跳、注册包
                     if (bytesStr.startsWith("404040") || bytesStr.startsWith("242424")) {
+                        log.info("空数据包: [{}]", bytesStr);
                         continue;
                     }
 
@@ -121,9 +122,8 @@ public class DtuDataProcess implements Runnable {
                         // 查询设置
                         dealMsg(sendMsg, str);
 
-                        return;
+                        continue;
                     }
-
 
                     DtuHeader dtuHeader = new DtuHeader();
                     dtuHeader.setDeviceId(device);
@@ -132,18 +132,20 @@ public class DtuDataProcess implements Runnable {
                     dtuHeader.setContent(bytes);
 
                     modbusParser.parse(bytes, dtuHeader);
-                    return;
+                    continue;
                 }
 
                 // 下行
                 if (2 == flow) {
 
-                    return;
+                    continue;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        log.warn("Kafka 消费线程退出!!!");
     }
 
     /**
@@ -165,7 +167,7 @@ public class DtuDataProcess implements Runnable {
 
         int site = pointUnit.getSiteId();
         int code = pointUnit.getReadFunction();
-        int star = pointUnit.getAddress();
+        int start = pointUnit.getAddress();
         int count = pointUnit.getType() == 4 ? 2 : 1;
 
         // 数字量
@@ -173,21 +175,10 @@ public class DtuDataProcess implements Runnable {
             count = pointUnit.getTags().length;
         }
 
-        ByteBuf byteBuf = Unpooled.buffer(6);
-        byteBuf.writeByte(site);
-        byteBuf.writeByte(code);
-        byteBuf.writeShort(star);
-        byteBuf.writeShort(count);
-        byte[] bytes = byteBuf.array();
-
-        String key = site + ":" + code + ":" + star;
-        SendMsg sendMsg = new SendMsg();
+        SendMsg sendMsg = senderTask.produceMsg(site, code, start, count);
         sendMsg.setDeviceId(msg.getDeviceId());
-        sendMsg.setCmd(code);
-        sendMsg.setBytes(bytes);
         // 0: 查询; 1: 设置
         sendMsg.setType(0);
-        sendMsg.setKey(key);
         sendMsg.setUnitList(msg.getUnitList());
         sendMsg.setFirst(true);
 
