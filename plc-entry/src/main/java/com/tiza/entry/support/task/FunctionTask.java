@@ -8,6 +8,7 @@ import com.tiza.entry.support.facade.dto.PointInfo;
 import com.tiza.entry.support.model.PointUnit;
 import com.tiza.entry.support.model.QueryFrame;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class FunctionTask implements ITask {
+
+    @Value("${dtu-byte-length}")
+    private int byteLength = 100;
 
     @Resource
     private PointInfoJpa pointInfoJpa;
@@ -89,6 +93,8 @@ public class FunctionTask implements ITask {
 
             // 构造功能集
             List<PointUnit> pointUnitList = buildUnit(pointInfoList);
+            // 按地址排序
+            pointUnitList.sort(Comparator.comparing(PointUnit::getAddress));
 
             List<PointUnit> readUnitList = pointUnitList.stream()
                     .filter(unit -> (1 == unit.getReadWrite() || 3 == unit.getReadWrite())).collect(Collectors.toList());
@@ -132,7 +138,7 @@ public class FunctionTask implements ITask {
             }
 
             // bit 类型
-            if (1 == pointType) {
+            else if (1 == pointType) {
                 Map<Integer, List<PointInfo>> unitMap = list.stream().collect(Collectors.groupingBy(PointInfo::getAddress));
 
                 // 按地址去重
@@ -144,7 +150,7 @@ public class FunctionTask implements ITask {
             }
 
             // 3:word;4:dword
-            if (3 == pointType || 4 == pointType) {
+            else if (3 == pointType || 4 == pointType) {
                 for (PointInfo pointInfo : list) {
                     PointUnit pointUnit = new PointUnit();
                     pointUnit.setType(pointType);
@@ -172,7 +178,7 @@ public class FunctionTask implements ITask {
      * @param list
      * @return
      */
-    private PointUnit fillUnit(List<PointInfo> list){
+    private PointUnit fillUnit(List<PointInfo> list) {
         PointUnit pointUnit = new PointUnit();
 
         renderFirst(pointUnit, list);
@@ -217,47 +223,42 @@ public class FunctionTask implements ITask {
     private List<QueryFrame> combineUnit(List<PointUnit> list) {
         List<QueryFrame> queryFrames = new ArrayList();
 
-        PointUnit last = list.get(0);
-        queryFrames.add(createFrame(last));
+        PointUnit startPoint = list.get(0);
+        PointUnit endPoint = list.get(list.size() - 1);
 
-        for (int i = 1; i < list.size(); i++) {
-            PointUnit unit = list.get(i);
-            // 类型(1:bit;2:byte;3:word;4:dword;5:digital)
-            int type = unit.getType();
-            int address = unit.getAddress();
+        int size = endPoint.getAddress() - startPoint.getAddress() + 1;
+        int count = size % byteLength == 0 ? size / byteLength : size / byteLength + 1;
 
-            boolean newQuery = true;
-            int gap = address - last.getAddress();
-            // 是否连续
-            if (gap == 0 || (gap == 1 && last.getType() != 4)
-                    || (gap == 2 && last.getType() == 4)) {
-                QueryFrame query = last.getQueryFrame();
-                if ((type != 4 && query.getCount().get() + 1 <= 60)
-                        || (type == 4 && query.getCount().get() + 2 <= 60)) {
+        int start = 0;
+        for (int i = 0; i < count; i++) {
+            PointUnit firstPoint = list.get(start);
+            // 最大地址
+            int max = firstPoint.getAddress() + byteLength;
 
-                    if (type == 4) {
-                        query.addCount(2);
-                    } else {
-                        query.addCount();
-                    }
-
-                    query.getPointUnits().add(unit);
-                    unit.setQueryFrame(query);
-                    newQuery = false;
+            QueryFrame query = createFrame(firstPoint);
+            queryFrames.add(query);
+            for (int j = start + 1; j < list.size(); j++) {
+                PointUnit unit = list.get(j);
+                if (unit.getAddress() > max) {
+                    start = j;
+                    break;
                 }
+                // 数据类型
+                int type = unit.getType();
+                if (type == 4) {
+                    query.addCount(2);
+                } else {
+                    query.addCount();
+                }
+                query.getPointUnits().add(unit);
+                unit.setQueryFrame(query);
             }
-
-            if (newQuery) {
-                queryFrames.add(createFrame(unit));
-            }
-
-            last = unit;
         }
 
         return queryFrames;
     }
 
-    public QueryFrame createFrame(PointUnit unit){
+    public QueryFrame createFrame(PointUnit unit) {
         QueryFrame query = new QueryFrame();
         query.setSite(unit.getSiteId());
         query.setCode(unit.getReadFunction());

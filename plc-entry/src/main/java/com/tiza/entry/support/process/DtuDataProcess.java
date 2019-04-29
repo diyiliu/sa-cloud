@@ -105,10 +105,19 @@ public class DtuDataProcess implements Runnable {
                     int type = sendMsg.getType();
                     // 查询匹配 从站地址, 功能码
                     if (type == 0) {
-                        PointUnit unit = sendMsg.getUnitList().get(0);
-                        if (site != unit.getSiteId() || code != unit.getReadFunction()) {
-                            log.error("设备[{}], 从站地址[{}, {}], 功能码[{}, {}], 上下行不匹配, 断开连接!",
-                                    device, site, unit.getSiteId(), code, unit.getReadFunction());
+                        int count = byteBuf.readByte();
+
+                        // 从站地址:功能码:起始地址:数量
+                        String key = sendMsg.getKey();
+                        String[] strArray = key.split(":");
+                        int realSite = Integer.valueOf(strArray[0]);
+                        int realCode = Integer.valueOf(strArray[0]);
+                        // int start = Integer.valueOf(strArray[2]);
+                        int realCount =  Integer.valueOf(strArray[3]);
+
+                        if (site != realSite || code != realCode || count != realCount) {
+                            log.error("设备[{}], 从站地址[{}, {}], 功能码[{}, {}], 长度[{}, {}], 上下行不匹配, 断开连接!",
+                                    device, site, realSite, code, realCount, count, realCount);
                             continue;
                         }
                     }

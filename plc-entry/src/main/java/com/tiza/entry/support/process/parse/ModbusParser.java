@@ -67,6 +67,16 @@ public class ModbusParser extends DataProcessAdapter {
             log.warn("设备不存在[{}]!", deviceId);
             return;
         }
+
+        ByteBuf buf = Unpooled.copiedBuffer(content);
+        // 从站地址，功能码
+        buf.readBytes(new byte[2]);
+        // 字节数
+        int length = buf.readUnsignedByte();
+        // 数据内容
+        content = new byte[length];
+        buf.readBytes(content);
+
         DeviceInfo deviceInfo = (DeviceInfo) deviceCacheProvider.get(deviceId);
         long equipId = deviceInfo.getId();
 
@@ -77,7 +87,6 @@ public class ModbusParser extends DataProcessAdapter {
         }
         sendMsg.setResult(1);
 
-
         // 加入历史下发缓存
         msgMemory.getMsgMap().put(sendMsg.getKey(), sendMsg);
 
@@ -87,50 +96,34 @@ public class ModbusParser extends DataProcessAdapter {
         // 字典表
         List<DetailInfo> detailList = storeGroup.getDetailList();
 
-        boolean isOk = true;
-        // 是否数字量
-        boolean isDigital = false;
+        // 从站地址:功能码:起始地址:数量
+        String key = sendMsg.getKey();
+        String[] strArray = key.split(":");
+        int start = Integer.parseInt(strArray[2]);
 
         List<PointUnit> unitList = sendMsg.getUnitList();
-        ByteBuf buf = Unpooled.copiedBuffer(content);
         for (int i = 0; i < unitList.size(); i++) {
             PointUnit pointUnit = unitList.get(i);
+            int address = pointUnit.getAddress();
             int type = pointUnit.getType();
 
             // 数字量单独处理
             if (5 == type) {
-                isDigital = true;
                 unpackUnit(content, pointUnit, summary, detailList);
                 break;
             }
 
             // 只有dword是四个字节,其他(除数字量)均为二个字节
-            int length = type == 4 ? 4 : 2;
+            int len = type == 4 ? 4 : 2;
+
             // 按字(两个字节)解析
-            if (buf.readableBytes() >= length) {
-                byte[] bytes = new byte[length];
-                buf.readBytes(bytes);
-
-                unpackUnit(bytes, pointUnit, summary, detailList);
-            } else {
-                log.error("字节长度不足, 数据解析异常!");
-                isOk = false;
-                break;
-            }
+            byte[] bytes = new byte[len];
+            buf.getBytes(address - start, bytes);
+            unpackUnit(bytes, pointUnit, summary, detailList);
         }
 
-        // 上下行匹配
-        if (isOk) {
-            if (!isDigital && buf.readableBytes() > 0) {
-                log.info("数据解析不完整(非数字量包!)");
-                return;
-            }
-
-            updateSummary(equipId, summary);
-            updateDetail(deviceInfo, detailList);
-        } else {
-            log.error("数据异常!");
-        }
+        updateSummary(equipId, summary);
+        updateDetail(deviceInfo, detailList);
     }
 
     /**
@@ -157,7 +150,7 @@ public class ModbusParser extends DataProcessAdapter {
                     int position = offset + p.getPosition();
                     String v = binaryStr.substring(position, position + 1);
 
-                    DetailInfo d =  fill(p, v, summary, detailList);
+                    DetailInfo d = fill(p, v, summary, detailList);
                     // 故障点
                     if (p.getFaultId() != null && p.getFaultType() > 0) {
                         d.setFaultId(p.getFaultId());
@@ -186,7 +179,7 @@ public class ModbusParser extends DataProcessAdapter {
         }
     }
 
-    private DetailInfo fill(PointInfo pointInfo, String value, Map summary, List<DetailInfo> detailList){
+    private DetailInfo fill(PointInfo pointInfo, String value, Map summary, List<DetailInfo> detailList) {
         // 当前表
         if (pointInfo.getSaveType() == 1) {
             String f = pointInfo.getField();

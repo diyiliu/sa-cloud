@@ -18,3 +18,6 @@ spring:
 # LOGGING
 logging:
   config: 'classpath:logback.xml'
+
+# 每次读取 100 个字节
+dtu-byte-length: 100

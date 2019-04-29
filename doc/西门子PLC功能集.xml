@@ -1,0 +1,1088 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<modbus>
+
+  <!--数据点地址配置（以下所有数字都使用10进制表示）
+  siteId 从站地址
+  function 功能码 1读数字量输出;2读数字量输入;3读保持寄存器
+  pointType 监控点数据类型(bit/byte/word/dword)
+  offset 起始地址的字节偏移量
+  frequency 频率 单位秒
+  -->
+  <address siteId="2" function="2" offset="0" length="24" frequency="30">
+    <point>
+      <!--监控点唯一标识-->
+      <tag>PbStartIn</tag>
+      <name>主机启动输入</name>
+      <type>bit</type>
+      <!--存储字段名称，如果此节点未设置则使用tag标签值作为字段名称-->
+      <field>PbStartIn</field>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="0" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>PbStopIn</tag>
+      <name>主机停止输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="1" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>PbOilPumpIn</tag>
+      <name>油泵启停输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="2" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>PbEmergencyIn</tag>
+      <name>紧急停机输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="3" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FbStartIn</tag>
+      <name>启动反馈输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="4" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>AlarmInverterIn</tag>
+      <name>变频器报警输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="5" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FaultInverterIn</tag>
+      <name>变频器故障输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="6" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>OverLoadOilPumpIn</tag>
+      <name>油泵过载输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="7" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>LowPressureIn</tag>
+      <name>油压低输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="0" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>LowWaterIn</tag>
+      <name>水流低输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="1" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>OilPressureDifferenceIn</tag>
+      <name>油压压差输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="2" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>LoadValveControlHalfIn</tag>
+      <name>加载阀控制50%输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="3" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>LoadValveControlFullIn</tag>
+      <name>加载阀控制100%输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="4" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FirstValveControlLowStopIn</tag>
+      <name>低位停止(一级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="5" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FirstValveControlMiddleStartIn</tag>
+      <name>中位开启(一级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="6" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FirstValveControlHighAlarmIn</tag>
+      <name>高位报警(一级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="7" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>SecondValveControlLowStopIn</tag>
+      <name>低位停止(二级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="0" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>SecondValveControlMiddleStartIn</tag>
+      <name>中位开启(二级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="1" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>SecondValveControlHighAlarmIn</tag>
+      <name>高位报警(二级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="2" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdValveControlLowStopIn</tag>
+      <name>低位停止(三级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="3" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdValveControlMiddleStartIn</tag>
+      <name>中位开启(三级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="4" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdValveControlHighAlarmIn</tag>
+      <name>高位报警(三级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="5" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FourthValveControlLowStopIn</tag>
+      <name>低位停止(四级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="6" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FourthValveControlMiddleStartIn</tag>
+      <name>中位开启(四级排污阀控制)输入</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="2" length="1">
+            <bit offset="7" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+  </address>
+
+  <address siteId="2" function="1" offset="0" length="16" frequency="30">
+    <point>
+      <tag>BypassControlOut</tag>
+      <name>主机旁路控制输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="0" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FaultStopOut</tag>
+      <name>故障停机输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="1" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>OilPumpRunOut</tag>
+      <name>油泵运行输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="2" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>HeatingOut</tag>
+      <name>电加热输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="3" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>LoadValve1Out</tag>
+      <name>加载阀1输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="4" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>LoadValve2Out</tag>
+      <name>加载阀2输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="5" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FirstPollutionOut</tag>
+      <name>一级排污输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="6" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>SecondPollutionOut</tag>
+      <name>二级排污输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="0" length="1">
+            <bit offset="7" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdPollutionOut</tag>
+      <name>三级排污输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="0" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FourthPollutionOut</tag>
+      <name>四级排污输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="1" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FirstWaterInletOut</tag>
+      <name>一缸进水输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="2" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>SecondWaterInletOut</tag>
+      <name>二缸进水输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="3" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdWaterInletOut</tag>
+      <name>三缸进水输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="4" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FourthWaterInletOut</tag>
+      <name>四缸进水输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="5" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>StopValveOut</tag>
+      <name>停机放气阀输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="6" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+    <point>
+      <tag>FaultOut</tag>
+      <name>故障指示输出</name>
+      <type>bit</type>
+      <parse>
+        <position>
+          <byte offset="1" length="1">
+            <bit offset="7" length="1"></bit>
+          </byte>
+        </position>
+      </parse>
+      <display>
+        <!--展示时的数据类型-->
+        <type><![CDATA[System.Nullable`1[*.*.*.LaunchStatus]]]></type>
+      </display>
+    </point>
+  </address>
+
+  <address siteId="2" function="3" offset="0" length="60" frequency="30">
+    <point>
+      <!--监控点唯一标识-->
+      <tag>MainCurrent</tag>
+      <name>主机电流</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <!--设置数据的大小端模式-->
+          <!--<endian>little</endian>-->
+          <byte offset="0" length="4"></byte>
+        </position>
+        <!--数值转换公式-->
+        <!--<formula>*1+0</formula>-->
+      </parse>
+      <display>
+        <!--单位-->
+        <unit>A</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>PowerSupplyVoltage</tag>
+      <name>供电电压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="4" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>V</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>LubricatingOilPressure</tag>
+      <name>润滑油压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="8" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>CoolingWaterPressure</tag>
+      <name>冷却水压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="12" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FirstLevelPressure</tag>
+      <name>一级排压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="16" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>SecondLevelPressure</tag>
+      <name>二级排压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="20" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdLevelPressure</tag>
+      <name>三级排压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="24" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FourthLevelPressure</tag>
+      <name>四级排压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="28" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FirstLevelTemperature</tag>
+      <name>一级排温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="32" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>SecondLevelTemperature</tag>
+      <name>二级排温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="36" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdLevelTemperature</tag>
+      <name>三级排温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="40" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FourthLevelTemperature</tag>
+      <name>四级排温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="44" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FirstWaterTemperature</tag>
+      <name>一缸水温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="48" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>SecondWaterTemperature</tag>
+      <name>二缸水温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="52" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdWaterTemperature</tag>
+      <name>三缸水温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="56" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FourthWaterTemperature</tag>
+      <name>四缸水温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="60" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>LubricatingOilTemperature</tag>
+      <name>润滑油温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="64" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>InletWaterTemperature</tag>
+      <name>进水温度</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="68" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>InstrumentPressure</tag>
+      <name>仪表气压</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="72" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Mpa</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FirstBushingTemperature</tag>
+      <name>轴瓦一温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="76" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>SecondBushingTemperature</tag>
+      <name>轴瓦二温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="80" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdBushingTemperature</tag>
+      <name>轴瓦三温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="84" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FourthBushingTemperature</tag>
+      <name>轴瓦四温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="88" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FifthBushingTemperature</tag>
+      <name>轴瓦五温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="92" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ShaftExtendTemperature</tag>
+      <name>轴伸端温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="96" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ShaftEndTemperature</tag>
+      <name>轴末端温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="100" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>FirstStatorTemperature</tag>
+      <name>定子一温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="104" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>SecondStatorTemperature</tag>
+      <name>定子二温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="108" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>ThirdStatorTemperature</tag>
+      <name>定子三温</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="112" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>℃</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+    <point>
+      <tag>WorkingFrequency</tag>
+      <name>运行频率</name>
+      <type>float</type>
+      <parse>
+        <position>
+          <byte offset="116" length="4"></byte>
+        </position>
+      </parse>
+      <display>
+        <unit>Hz</unit>
+        <quota>1</quota>
+      </display>
+    </point>
+  </address>
+</modbus>
