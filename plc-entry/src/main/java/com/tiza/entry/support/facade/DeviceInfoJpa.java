@@ -10,5 +10,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface DeviceInfoJpa extends JpaRepository<DeviceInfo, Long> {
 
-    DeviceInfo findById(long id);
 }

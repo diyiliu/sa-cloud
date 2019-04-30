@@ -239,19 +239,24 @@ public class FunctionTask implements ITask {
             queryFrames.add(query);
             for (int j = start + 1; j < list.size(); j++) {
                 PointUnit unit = list.get(j);
+                // 拆包
                 if (unit.getAddress() > max) {
                     start = j;
+                    PointUnit last = list.get(j - 1);
+                    query.setCount(last.getAddress() - firstPoint.getAddress() + 1);
+
                     break;
                 }
-                // 数据类型
-                int type = unit.getType();
-                if (type == 4) {
-                    query.addCount(2);
-                } else {
-                    query.addCount();
-                }
+
+                // 添加点
                 query.getPointUnits().add(unit);
                 unit.setQueryFrame(query);
+
+                // 最后一个包
+                if (j + 1 == list.size()) {
+                    PointUnit last = list.get(j - 1);
+                    query.setCount(last.getAddress() - firstPoint.getAddress() + 1);
+                }
             }
         }
 
@@ -263,7 +268,7 @@ public class FunctionTask implements ITask {
         query.setSite(unit.getSiteId());
         query.setCode(unit.getReadFunction());
         query.setStart(unit.getAddress());
-        query.addCount(unit.getType() == 4 ? 2 : 1);
+        query.setCount(unit.getType() == 4 ? 2 : 1);
         unit.setQueryFrame(query);
 
         List<PointUnit> units = new ArrayList();

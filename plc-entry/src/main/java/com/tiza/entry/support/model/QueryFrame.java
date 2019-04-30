@@ -20,24 +20,18 @@ public class QueryFrame {
     /** 起始地址 */
     private int start;
 
-    /** 字(word)数 max:60 */
-    private AtomicInteger count = new AtomicInteger(0);
+    /** 字(word)数 */
+    private int count;
 
     /** 功能集中的点 */
     private List<PointUnit> pointUnits;
 
-    public AtomicInteger getCount() {
+    public int getCount() {
         return count;
     }
 
-    public void addCount() {
-
-        this.count.incrementAndGet();
-    }
-
-    public void addCount(int i) {
-
-        this.count.addAndGet(i);
+    public void setCount(int count) {
+        this.count = count;
     }
 
     public int getSite() {

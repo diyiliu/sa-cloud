@@ -118,7 +118,7 @@ public class ModbusParser extends DataProcessAdapter {
 
             // 按字(两个字节)解析
             byte[] bytes = new byte[len];
-            buf.getBytes(address - start, bytes);
+            buf.getBytes((address - start) * 2, bytes);
             unpackUnit(bytes, pointUnit, summary, detailList);
         }
 

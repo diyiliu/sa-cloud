@@ -105,7 +105,7 @@ public class SenderTask implements ITask {
         int site = queryFrame.getSite();
         int code = queryFrame.getCode();
         int start = queryFrame.getStart();
-        int count = queryFrame.getCount().get();
+        int count = queryFrame.getCount();
 
         List<PointUnit> unitList = queryFrame.getPointUnits();
         if (type == 5) {
