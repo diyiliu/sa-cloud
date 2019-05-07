@@ -33,3 +33,5 @@ redis:
   password:
   database: 0
   channel: sa_channel
+  equipment-info-key: 'sa:summery:'
+  equipment-detail-key: 'sa:detail:'

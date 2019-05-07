@@ -13,6 +13,7 @@ import com.tiza.entry.support.model.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -82,17 +83,19 @@ public class SenderTask implements ITask {
             String version = deviceInfo.getSoftVersion();
 
             Map<Integer, List<QueryFrame>> fnQuery = (Map<Integer, List<QueryFrame>>) queryGroupCache.get(version);
-            for (Iterator<Integer> iter = fnQuery.keySet().iterator(); iter.hasNext(); ) {
-                int fnCode = iter.next();
+            if (MapUtils.isNotEmpty(fnQuery)) {
+                for (Iterator<Integer> iter = fnQuery.keySet().iterator(); iter.hasNext(); ) {
+                    int fnCode = iter.next();
 
-                List<QueryFrame> frameList = fnQuery.get(fnCode);
-                if (frameList.size() < 1) {
-                    continue;
-                }
+                    List<QueryFrame> frameList = fnQuery.get(fnCode);
+                    if (frameList.size() < 1) {
+                        continue;
+                    }
 
-                for (QueryFrame frame : frameList) {
-                    SendMsg msg = buildMsg(deviceId, frame);
-                    toSend(msg);
+                    for (QueryFrame frame : frameList) {
+                        SendMsg msg = buildMsg(deviceId, frame);
+                        toSend(msg);
+                    }
                 }
             }
         }
@@ -121,7 +124,7 @@ public class SenderTask implements ITask {
         return sendMsg;
     }
 
-    public SendMsg produceMsg(int site, int code, int start, int count){
+    public SendMsg produceMsg(int site, int code, int start, int count) {
         ByteBuf byteBuf = Unpooled.buffer(6);
         byteBuf.writeByte(site);
         byteBuf.writeByte(code);
@@ -192,6 +195,18 @@ public class SenderTask implements ITask {
                             pool.getKeyList().remove(key);
                         }
 
+                        // 添加下发缓存
+                        MsgMemory msgMemory;
+                        if (sendCacheProvider.containsKey(deviceId)) {
+                            msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
+                        } else {
+                            msgMemory = new MsgMemory();
+                            msgMemory.setDeviceId(deviceId);
+                            sendCacheProvider.put(deviceId, msgMemory);
+                        }
+                        msg.setDateTime(System.currentTimeMillis());
+                        msgMemory.setCurrent(msg);
+
                         JedisPool jedisPool = redisUtil.getPool();
                         try (Jedis jedis = jedisPool.getResource()) {
                             SubMsg subMsg = new SubMsg();
@@ -210,18 +225,6 @@ public class SenderTask implements ITask {
                         if (1 == msg.getType()) {
                             updateLog(msg, 1, "");
                         }
-
-                        // 添加下发缓存
-                        MsgMemory msgMemory;
-                        if (sendCacheProvider.containsKey(deviceId)) {
-                            msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
-                        } else {
-                            msgMemory = new MsgMemory();
-                            msgMemory.setDeviceId(deviceId);
-                            sendCacheProvider.put(deviceId, msgMemory);
-                        }
-                        msg.setDateTime(System.currentTimeMillis());
-                        msgMemory.setCurrent(msg);
                     }
                     Thread.sleep(2000);
                 }
@@ -267,7 +270,7 @@ public class SenderTask implements ITask {
             SendMsg current = msgMemory.getCurrent();
             if (current != null && current.getResult() == 0) {
                 //  超时丢弃未应答指令
-                if (System.currentTimeMillis() - current.getDateTime() > 5 * 1000) {
+                if (System.currentTimeMillis() - current.getDateTime() > 20 * 1000) {
                     log.info("设备[{}]丢弃超时未应答指令[{}]!", current.getDeviceId(), CommonUtil.bytesToStr(current.getBytes()));
                     current.setResult(1);
                     if (current.getType() == 1) {

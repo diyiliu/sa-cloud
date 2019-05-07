@@ -58,6 +58,7 @@ public class FunctionTask implements ITask {
 
         fnSet.stream().forEach(e -> {
             String version = (String) e;
+
             List<PointUnit> readFnList = (List<PointUnit>) readFnCacheProvider.get(version);
             Map<Integer, List<PointUnit>> fnMap = readFnList.stream().collect(Collectors.groupingBy(PointUnit::getReadFunction));
 
@@ -223,27 +224,25 @@ public class FunctionTask implements ITask {
     private List<QueryFrame> combineUnit(List<PointUnit> list) {
         List<QueryFrame> queryFrames = new ArrayList();
 
-        PointUnit startPoint = list.get(0);
-        PointUnit endPoint = list.get(list.size() - 1);
-
-        int size = endPoint.getAddress() - startPoint.getAddress() + 1;
-        int count = size % byteLength == 0 ? size / byteLength : size / byteLength + 1;
-
-        int start = 0;
-        for (int i = 0; i < count; i++) {
-            PointUnit firstPoint = list.get(start);
+        for (int i = 0; i < list.size(); i++) {
+            PointUnit firstPoint = list.get(i);
             // 最大地址
             int max = firstPoint.getAddress() + byteLength;
 
+            int type = firstPoint.getType();
+            int gap = type == 4 ? 2 : 1;
+
             QueryFrame query = createFrame(firstPoint);
             queryFrames.add(query);
-            for (int j = start + 1; j < list.size(); j++) {
+            for (int j = i + 1; j < list.size(); j++) {
                 PointUnit unit = list.get(j);
+
                 // 拆包
-                if (unit.getAddress() > max) {
-                    start = j;
-                    PointUnit last = list.get(j - 1);
-                    query.setCount(last.getAddress() - firstPoint.getAddress() + 1);
+                if (unit.getAddress() > max || type != unit.getType()) {
+                    i = j - 1;
+
+                    PointUnit last = list.get(i);
+                    query.setCount(last.getAddress() - firstPoint.getAddress() + gap);
 
                     break;
                 }
@@ -254,8 +253,9 @@ public class FunctionTask implements ITask {
 
                 // 最后一个包
                 if (j + 1 == list.size()) {
-                    PointUnit last = list.get(j - 1);
-                    query.setCount(last.getAddress() - firstPoint.getAddress() + 1);
+                    query.setCount(unit.getAddress() - firstPoint.getAddress() + gap);
+                    // 结束
+                    i = j;
                 }
             }
         }

@@ -71,7 +71,7 @@ public class DtuHandler extends ChannelInboundHandlerAdapter {
             } else if (IdleState.ALL_IDLE == event.state()) {
                 if (StringUtils.isNotEmpty(deviceId)){
 
-                    processHandler.idle(deviceId);
+                    processHandler.idle(deviceId, ctx);
                 }
             }
         }

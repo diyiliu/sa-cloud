@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class DataProcessHandler{
+public class DataProcessHandler {
     /**
      * 设备消息队列
      **/
@@ -66,18 +66,14 @@ public class DataProcessHandler{
      * @param deviceId
      * @return
      */
-    public void idle(String deviceId) {
-        if (onlineCacheProvider.containsKey(deviceId) &&
-                DataProcessHandler.DEVICE_POOL.containsKey(deviceId)){
-
+    public void idle(String deviceId, ChannelHandlerContext ctx) {
+        if (DataProcessHandler.DEVICE_POOL.containsKey(deviceId)) {
             SinglePool singlePool = DataProcessHandler.DEVICE_POOL.get(deviceId);
             Queue<byte[]> queue = singlePool.getPool();
 
-            if (!queue.isEmpty()){
+            if (!queue.isEmpty()) {
                 byte[] bytes = queue.poll();
-
-                MsgPipeline msgPipeline = (MsgPipeline) onlineCacheProvider.get(deviceId);
-                msgPipeline.getContext().writeAndFlush(Unpooled.copiedBuffer(bytes));
+                ctx.writeAndFlush(Unpooled.copiedBuffer(bytes));
             }
         }
     }

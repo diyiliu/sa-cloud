@@ -3,6 +3,7 @@ package com.tiza.entry.support.process;
 import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
+import com.tiza.entry.support.facade.dto.DeviceInfo;
 import com.tiza.entry.support.model.DtuHeader;
 import com.tiza.entry.support.model.MsgMemory;
 import com.tiza.entry.support.model.PointUnit;
@@ -15,9 +16,11 @@ import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +45,9 @@ public class DtuDataProcess implements Runnable {
     private ICache onlineCacheProvider;
 
     @Resource
+    private ICache deviceCacheProvider;
+
+    @Resource
     private ICache sendCacheProvider;
 
     @Resource
@@ -49,6 +55,9 @@ public class DtuDataProcess implements Runnable {
 
     @Resource
     private ModbusParser modbusParser;
+
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
     public void init() {
         executor.execute(this);
@@ -86,10 +95,18 @@ public class DtuDataProcess implements Runnable {
 
                     // 心跳、注册包
                     if (bytesStr.startsWith("404040") || bytesStr.startsWith("242424")) {
-                        log.info("空数据包: [{}]", bytesStr);
+                        log.info("设备上线: [{}]", bytesStr);
+
+                        DeviceInfo deviceInfo = (DeviceInfo) deviceCacheProvider.get(device);
+                        if (deviceInfo != null) {
+                            String sql = "UPDATE equipment_info SET DtuStatus = 1, LastTime = ? WHERE EquipmentId = ?";
+                            jdbcTemplate.update(sql, new Object[]{new Date(), deviceInfo.getId()});
+                        }
+
                         continue;
                     }
 
+                    log.info("设备[{}]收到数据: [{}]", device, bytesStr);
                     if (!sendCacheProvider.containsKey(device)) {
                         log.error("数据异常, 找不到下行数据与之对应。");
                         continue;
@@ -105,25 +122,45 @@ public class DtuDataProcess implements Runnable {
                     int type = sendMsg.getType();
                     // 查询匹配 从站地址, 功能码
                     if (type == 0) {
-                        int count = byteBuf.readByte();
+                        // 字节数
+                        int count = byteBuf.readUnsignedByte();
+                        byte[] content = new byte[count];
+                        byteBuf.readBytes(content);
+
+                        /** 类型(1:bit;2:byte;3:word;4:dword;5:digital)*/
+                        PointUnit pointUnit = sendMsg.getUnitList().get(0);
+                        int dataType = pointUnit.getType();
 
                         // 从站地址:功能码:起始地址:数量
                         String key = sendMsg.getKey();
                         String[] strArray = key.split(":");
                         int realSite = Integer.valueOf(strArray[0]);
-                        int realCode = Integer.valueOf(strArray[0]);
+                        int realCode = Integer.valueOf(strArray[1]);
                         // int start = Integer.valueOf(strArray[2]);
-                        int realCount =  Integer.valueOf(strArray[3]);
+                        int realCount = Integer.valueOf(strArray[3]);
+                        if (5 == dataType) {
+                            realCount /= 8;
+                        } else {
+                            realCount *= 2;
+                        }
 
                         if (site != realSite || code != realCode || count != realCount) {
-                            log.error("设备[{}], 从站地址[{}, {}], 功能码[{}, {}], 长度[{}, {}], 上下行不匹配, 断开连接!",
-                                    device, site, realSite, code, realCount, count, realCount);
+                            log.error("设备[{}], 从站地址[{}, {}], 功能码[{}, {}], 长度[{}, {}], 上下行不匹配!",
+                                    device, site, realSite, code, realCode, count, realCount);
                             continue;
                         }
+
+                        DtuHeader dtuHeader = new DtuHeader();
+                        dtuHeader.setDeviceId(device);
+                        dtuHeader.setAddress(site);
+                        dtuHeader.setCode(code);
+                        dtuHeader.setContent(content);
+
+                        modbusParser.parse(content, dtuHeader);
                     }
 
                     // 设置应答
-                    if (type == 1 && sendMsg.getResult() == 0) {
+                    else if (type == 1 && sendMsg.getResult() == 0) {
                         sendMsg.setResult(1);
                         String str = CommonUtil.bytesToStr(bytes);
 
@@ -133,22 +170,8 @@ public class DtuDataProcess implements Runnable {
 
                         continue;
                     }
-
-                    DtuHeader dtuHeader = new DtuHeader();
-                    dtuHeader.setDeviceId(device);
-                    dtuHeader.setAddress(site);
-                    dtuHeader.setCode(code);
-                    dtuHeader.setContent(bytes);
-
-                    modbusParser.parse(bytes, dtuHeader);
-                    continue;
                 }
 
-                // 下行
-                if (2 == flow) {
-
-                    continue;
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();

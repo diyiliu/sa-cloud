@@ -40,7 +40,7 @@ public class KafkaUtil {
 
                 producer.send(new KeyedMessage(topic, data.getKey(), data.getValue()));
             }
-        }, 2, 10, TimeUnit.SECONDS);
+        }, 10, 2, TimeUnit.SECONDS);
     }
 
     public void setTopic(String topic) {

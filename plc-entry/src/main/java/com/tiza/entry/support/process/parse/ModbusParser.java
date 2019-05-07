@@ -4,10 +4,11 @@ import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.model.DataProcessAdapter;
 import com.diyiliu.plugin.model.Header;
 import com.diyiliu.plugin.util.CommonUtil;
+import com.diyiliu.plugin.util.DateUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
 import com.tiza.air.cluster.KafkaUtil;
+import com.tiza.air.cluster.RedisUtil;
 import com.tiza.air.model.KafkaMsg;
-import com.tiza.entry.support.facade.DetailInfoJpa;
 import com.tiza.entry.support.facade.FaultInfoJpa;
 import com.tiza.entry.support.facade.dto.*;
 import com.tiza.entry.support.model.*;
@@ -15,7 +16,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -50,13 +51,19 @@ public class ModbusParser extends DataProcessAdapter {
     private ICache alarmCacheProvider;
 
     @Resource
-    private DetailInfoJpa detailInfoJpa;
-
-    @Resource
     private FaultInfoJpa faultInfoJpa;
 
     @Resource
     private JdbcTemplate jdbcTemplate;
+
+    @Resource
+    private RedisUtil redisUtil;
+
+    @Value("${redis.equipment-info-key}")
+    private String summaryKey;
+
+    @Value("${redis.equipment-detail-key}")
+    private String detailKey;
 
     @Override
     public void parse(byte[] content, Header header) {
@@ -67,15 +74,7 @@ public class ModbusParser extends DataProcessAdapter {
             log.warn("设备不存在[{}]!", deviceId);
             return;
         }
-
         ByteBuf buf = Unpooled.copiedBuffer(content);
-        // 从站地址，功能码
-        buf.readBytes(new byte[2]);
-        // 字节数
-        int length = buf.readUnsignedByte();
-        // 数据内容
-        content = new byte[length];
-        buf.readBytes(content);
 
         DeviceInfo deviceInfo = (DeviceInfo) deviceCacheProvider.get(deviceId);
         long equipId = deviceInfo.getId();
@@ -115,15 +114,16 @@ public class ModbusParser extends DataProcessAdapter {
 
             // 只有dword是四个字节,其他(除数字量)均为二个字节
             int len = type == 4 ? 4 : 2;
+            int begin = (address - start) * 2;
 
             // 按字(两个字节)解析
             byte[] bytes = new byte[len];
-            buf.getBytes((address - start) * 2, bytes);
+            buf.getBytes(begin, bytes);
             unpackUnit(bytes, pointUnit, summary, detailList);
         }
 
-        updateSummary(equipId, summary);
-        updateDetail(deviceInfo, detailList);
+        flushSummary(equipId, summary);
+        flushDetail(deviceInfo, detailList);
     }
 
     /**
@@ -202,27 +202,9 @@ public class ModbusParser extends DataProcessAdapter {
      * @param equipId
      * @param paramValues
      */
-    private void updateSummary(long equipId, Map paramValues) {
-        List list = new ArrayList();
-        StringBuilder sqlBuilder = new StringBuilder("UPDATE equipment_info SET ");
-
-        if (MapUtils.isNotEmpty(paramValues)) {
-            for (Iterator iterator = paramValues.keySet().iterator(); iterator.hasNext(); ) {
-                String key = (String) iterator.next();
-
-                sqlBuilder.append(key).append("=?, ");
-                Object val = paramValues.get(key);
-                list.add(val);
-            }
-        }
-
-        // 最新时间
-        sqlBuilder.append("lastTime").append("=?, ");
-        list.add(new Date());
-
-        //log.info("[更新] 设备[{}]当前信息...", equipId);
-        String sql = sqlBuilder.substring(0, sqlBuilder.length() - 2) + " WHERE equipmentId=" + equipId;
-        jdbcTemplate.update(sql, list.toArray());
+    private void flushSummary(long equipId, Map paramValues) {
+        paramValues.put("lastTime", DateUtil.dateToString(new Date()));
+        redisUtil.hset(summaryKey + equipId, paramValues);
     }
 
     /**
@@ -231,10 +213,11 @@ public class ModbusParser extends DataProcessAdapter {
      * @param deviceInfo
      * @param detailInfoList
      */
-    private void updateDetail(DeviceInfo deviceInfo, List<DetailInfo> detailInfoList) {
+    private void flushDetail(DeviceInfo deviceInfo, List<DetailInfo> detailInfoList) {
         if (CollectionUtils.isNotEmpty(detailInfoList)) {
             long equipId = deviceInfo.getId();
 
+            Map redisMap = new HashMap();
             for (DetailInfo detailInfo : detailInfoList) {
                 detailInfo.setEquipId(equipId);
                 detailInfo.setLastTime(new Date());
@@ -243,15 +226,15 @@ public class ModbusParser extends DataProcessAdapter {
                 if (detailInfo.getFaultId() != null) {
                     dealFault(detailInfo);
                 }
+
+                redisMap.put(detailInfo.getTag(), detailInfo.getValue() + "|" + detailInfo.getLastTime().getTime());
             }
-            //log.info("[更新] 设备[{}]详细信息...", equipId);
+            redisMap.put("lastTime", DateUtil.dateToString(new Date()));
 
-            // 批量更新数据
-            detailInfoJpa.saveAll(detailInfoList);
-
+            // 写入 redis
+            redisUtil.hset(detailKey + equipId, redisMap);
             // 处理自定义报警
             doAlarm(deviceInfo, detailInfoList);
-
             // 写入kafka
             toKafka(String.valueOf(equipId), detailInfoList);
         }

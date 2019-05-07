@@ -5,6 +5,9 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -150,7 +153,7 @@ public class RedisUtil {
     public <T> boolean set(final String key, T value, int expireTime) {
         boolean result = false;
         try (Jedis jedis = pool.getResource()) {
-            String str = JacksonUtil.toJson(value);
+            String str = beanToString(value);
             jedis.setex(key, expireTime, str);
             result = true;
         } catch (Exception e) {
@@ -159,20 +162,59 @@ public class RedisUtil {
         return result;
     }
 
+    /**
+     * 写入 hashMap
+     *
+     * @param key
+     * @param map
+     * @param <T>
+     * @return
+     */
+    public <T> boolean hset(final String key, Map<String, T> map) {
+        boolean result = false;
+        try (Jedis jedis = pool.getResource()) {
+            for (Iterator<String> iterator = map.keySet().iterator(); iterator.hasNext(); ) {
+                String field = iterator.next();
+                String val = beanToString(map.get(field));
+
+                jedis.hset(key, field, val);
+            }
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    /**
+     * 读取 hashMap
+     *
+     * @param key
+     * @return
+     */
+    public Map<String, String> hgetAll(final String key) {
+        Map<String, String> result = new HashMap();
+        try (Jedis jedis = pool.getResource()) {
+            result = jedis.hgetAll(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+
     public static <T> String beanToString(T value) {
         if (value == null) {
 
             return null;
         }
 
-        Class<?> clazz = value.getClass();
-        if (clazz == int.class || clazz == Integer.class) {
-
-            return "" + value;
-        } else if (clazz == String.class) {
+        if (value instanceof String) {
 
             return (String) value;
-        } else if (clazz == long.class || clazz == Long.class) {
+        } else if (value instanceof Number) {
 
             return "" + value;
         } else {
@@ -187,12 +229,12 @@ public class RedisUtil {
             return null;
         }
 
-        if (clazz == int.class || clazz == Integer.class) {
-
-            return (T) Integer.valueOf(str);
-        } else if (clazz == String.class) {
+        if (clazz == String.class) {
 
             return (T) str;
+        } else if (clazz == int.class || clazz == Integer.class) {
+
+            return (T) Integer.valueOf(str);
         } else if (clazz == long.class || clazz == Long.class) {
 
             return (T) Long.valueOf(str);
