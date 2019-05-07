@@ -3,7 +3,6 @@ package com.tiza.entry.support.process;
 import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
-import com.tiza.entry.support.facade.dto.DeviceInfo;
 import com.tiza.entry.support.model.DtuHeader;
 import com.tiza.entry.support.model.MsgMemory;
 import com.tiza.entry.support.model.PointUnit;
@@ -16,11 +15,9 @@ import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +42,6 @@ public class DtuDataProcess implements Runnable {
     private ICache onlineCacheProvider;
 
     @Resource
-    private ICache deviceCacheProvider;
-
-    @Resource
     private ICache sendCacheProvider;
 
     @Resource
@@ -55,9 +49,6 @@ public class DtuDataProcess implements Runnable {
 
     @Resource
     private ModbusParser modbusParser;
-
-    @Resource
-    private JdbcTemplate jdbcTemplate;
 
     public void init() {
         executor.execute(this);
@@ -96,13 +87,6 @@ public class DtuDataProcess implements Runnable {
                     // 心跳、注册包
                     if (bytesStr.startsWith("404040") || bytesStr.startsWith("242424")) {
                         log.info("设备上线: [{}]", bytesStr);
-
-                        DeviceInfo deviceInfo = (DeviceInfo) deviceCacheProvider.get(device);
-                        if (deviceInfo != null) {
-                            String sql = "UPDATE equipment_info SET DtuStatus = 1, LastTime = ? WHERE EquipmentId = ?";
-                            jdbcTemplate.update(sql, new Object[]{new Date(), deviceInfo.getId()});
-                        }
-
                         continue;
                     }
 

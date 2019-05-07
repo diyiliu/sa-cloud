@@ -203,7 +203,9 @@ public class ModbusParser extends DataProcessAdapter {
      * @param paramValues
      */
     private void flushSummary(long equipId, Map paramValues) {
+        paramValues.put("dtuStatus", 1);
         paramValues.put("lastTime", DateUtil.dateToString(new Date()));
+
         redisUtil.hset(summaryKey + equipId, paramValues);
     }
 
@@ -233,10 +235,10 @@ public class ModbusParser extends DataProcessAdapter {
 
             // 写入 redis
             redisUtil.hset(detailKey + equipId, redisMap);
+            // 写入 kafka
+            toKafka(String.valueOf(equipId), detailInfoList);
             // 处理自定义报警
             doAlarm(deviceInfo, detailInfoList);
-            // 写入kafka
-            toKafka(String.valueOf(equipId), detailInfoList);
         }
     }
 
