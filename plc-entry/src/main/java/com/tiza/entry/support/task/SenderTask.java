@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -47,6 +48,9 @@ public class SenderTask implements ITask {
 
     @Resource
     private SendLogJpa sendLogJpa;
+
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
     @Resource
     private ICache deviceCacheProvider;
@@ -256,6 +260,9 @@ public class SenderTask implements ITask {
             pool.getMsgQueue().clear();
             pool.getKeyList().clear();
         }
+
+        String sql = "UPDATE equipment_info SET DtuStatus = 0, LastTime = ? WHERE EquipmentId = ?";
+        jdbcTemplate.update(sql, new Object[]{new Date(), deviceId});
     }
 
     /**
