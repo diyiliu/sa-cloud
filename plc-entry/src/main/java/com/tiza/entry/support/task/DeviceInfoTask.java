@@ -30,7 +30,7 @@ public class DeviceInfoTask implements ITask {
     private DeviceInfoJpa deviceInfoJpa;
 
 
-    @Scheduled(fixedRate = 5 * 60 * 1000, initialDelay = 200)
+    @Scheduled(fixedRate = 5 * 60 * 1000, initialDelay = 1000)
     public void execute() {
         log.info("刷新设备列表 ...");
         List<DeviceInfo> list = deviceInfoJpa.findAll();

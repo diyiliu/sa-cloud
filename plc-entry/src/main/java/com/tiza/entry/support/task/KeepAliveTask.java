@@ -22,7 +22,7 @@ import java.util.Set;
 @Slf4j
 @Service
 public class KeepAliveTask implements ITask {
-    private final static int INTERVAL_TIME = 3; // 分钟
+    private final static int INTERVAL_TIME = 2; // 分钟
 
     @Resource
     private ICache onlineCacheProvider;

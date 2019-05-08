@@ -2,12 +2,15 @@ package com.tiza.entry.controller;
 
 import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.util.CommonUtil;
+import com.diyiliu.plugin.util.JacksonUtil;
+import com.tiza.air.cluster.RedisUtil;
 import com.tiza.entry.support.facade.DetailInfoJpa;
 import com.tiza.entry.support.facade.DeviceInfoJpa;
 import com.tiza.entry.support.facade.dto.DetailInfo;
 import com.tiza.entry.support.facade.dto.DeviceInfo;
 import com.tiza.entry.support.facade.dto.PointInfo;
 import com.tiza.entry.support.model.PointUnit;
+import com.tiza.entry.support.model.RespBody;
 import com.tiza.entry.support.model.SendMsg;
 import com.tiza.entry.support.task.SenderTask;
 import io.netty.buffer.ByteBuf;
@@ -16,17 +19,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.collections.MapUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Description: SetupController
@@ -38,6 +37,12 @@ import java.util.stream.Collectors;
 @RestController
 @Api(description = "设备指令下发接口")
 public class SetupController {
+
+    @Value("${redis.equipment-detail-key}")
+    private String detailKey;
+
+    @Resource
+    private RedisUtil redisUtil;
 
     @Resource
     private ICache onlineCacheProvider;
@@ -54,51 +59,64 @@ public class SetupController {
     @Resource
     private SenderTask senderTask;
 
-    /**
-     * 参数设置
-     *
-     * @param key
-     * @param value
-     * @param equipId
-     * @param rowId
-     * @param response
-     * @return
-     */
-    @PostMapping("/setup")
-    @ApiOperation(value = "参数设置", notes = "设置设备参数")
-    public String setup(@RequestParam("key") String key, @RequestParam("value") String value,
-                        @RequestParam("equipId") String equipId, @RequestParam("rowId") Long rowId, HttpServletResponse response) {
+    @GetMapping("/latest")
+    @ApiOperation(value = "数据同步", notes = "获取设备最新数据")
+    public RespBody latestData(@RequestParam("equipId") String equipId) {
+        Map dataMap = redisUtil.hgetAll(detailKey + equipId);
+        if (MapUtils.isNotEmpty(dataMap)) {
+            dataMap.remove("lastTime");
+        }
 
-        DeviceInfo deviceInfo = deviceInfoJpa.findById(Long.parseLong(equipId)).get();
+        return buildResp(dataMap);
+    }
+
+    @PostMapping("/confirm")
+    @ApiOperation(value = "数据确认", notes = "确认下发内容")
+    public RespBody confirm(@RequestParam("equipId") long equipId, @RequestParam("key") String key, @RequestParam("value") String value) {
+        DeviceInfo deviceInfo = deviceInfoJpa.findById(equipId).get();
+
         String dtuId = deviceInfo.getDtuId();
         if (!onlineCacheProvider.containsKey(dtuId)) {
 
-            response.setStatus(500);
-            return "设备离线。";
+            return buildResp(2, "设备离线");
         }
 
-        String softVersion = deviceInfo.getSoftVersion();
-        if (!writeFnCacheProvider.containsKey(softVersion)) {
-
-            response.setStatus(500);
-            return "未配置设备功能集。";
-        }
-
-        List<PointUnit> writeUnitList = (List<PointUnit>) writeFnCacheProvider.get(softVersion);
-        PointUnit pointUnit = null;
-        for (PointUnit unit : writeUnitList) {
-            List<String> tagList = Arrays.asList(unit.getTags());
-            if (tagList.contains(key)) {
-
-                pointUnit = unit;
-                break;
-            }
-        }
-
+        PointUnit pointUnit = fetchUnit(deviceInfo.getSoftVersion(), key);
         if (pointUnit == null) {
-            response.setStatus(500);
-            return "功能集中未找到TAG[" + key + "]。";
+
+            return buildResp(2, "功能集异常");
         }
+
+        Map paramMap = new HashMap();
+        paramMap.put(key, value);
+        if (pointUnit.getTags().length == 1) {
+
+            return buildResp(paramMap);
+        }
+
+        String[] tags = pointUnit.getTags();
+        List<DetailInfo> details = detailInfoJpa.findByEquipIdAndTagIn(deviceInfo.getId(), tags);
+        if (CollectionUtils.isEmpty(details)) {
+
+            return buildResp(2, "功能集异常");
+        }
+
+        Map dataMap = redisUtil.hgetAll(detailKey + equipId);
+        details.forEach(e -> {
+            String tag = e.getTag();
+            paramMap.put(tag, dataMap.get(tag));
+        });
+
+        return buildResp(paramMap);
+    }
+
+    @PostMapping("/setup")
+    @ApiOperation(value = "参数设置", notes = "设置设备参数")
+    public RespBody setup(@RequestParam("key") String key, @RequestParam("value") String value,
+                          @RequestParam("equipId") long equipId, @RequestParam("rowId") Long rowId, @RequestBody(required = false) String jsonBody) throws IOException {
+
+        DeviceInfo deviceInfo = deviceInfoJpa.findById(equipId).get();
+        PointUnit pointUnit = fetchUnit(deviceInfo.getSoftVersion(), key);
 
         // 设置值转int
         int val;
@@ -125,24 +143,18 @@ public class SetupController {
             side = pointInfo.getSiteId();
             address = pointInfo.getAddress();
         } else {
+            Map tagMap = JacksonUtil.toObject(jsonBody, HashMap.class);
+
             String[] tags = pointUnit.getTags();
-            List<DetailInfo> details = detailInfoJpa.findByEquipIdAndTagIn(deviceInfo.getId(), tags);
-            if (CollectionUtils.isEmpty(details)) {
-
-                response.setStatus(500);
-                return "TA[{" + key + "}]节点异常。";
-            }
-
             int length = tags.length;
-            Map<String, String> tagValue = details.stream().collect(Collectors.toMap(DetailInfo::getTag, DetailInfo::getValue));
             StringBuilder strBuf = new StringBuilder();
             // 最小单元为字(两个字节)
             for (int i = 0; i < 16; i++) {
                 if (i < length) {
                     String tag = tags[i];
                     String v = "0";
-                    if (tagValue.containsKey(tag)) {
-                        v = tagValue.get(tag);
+                    if (tagMap.containsKey(tag)) {
+                        v = String.valueOf(tagMap.get(tag));
                     }
                     if (key.equals(tag)) {
                         v = value;
@@ -164,6 +176,8 @@ public class SetupController {
         List<PointUnit> unitList = new ArrayList();
         unitList.add(pointUnit);
 
+        // 设备编号
+        String dtuId = deviceInfo.getDtuId();
         // 功能码
         int code = pointUnit.getWriteFunction();
 
@@ -181,7 +195,32 @@ public class SetupController {
         senderTask.toSend(sendMsg);
         log.info("设备[{}]参数[{},{}]等待下发[{}]...", dtuId, key, value, CommonUtil.bytesToStr(bytes));
 
-        return "设置成功。";
+        return buildResp(1, "下发成功");
+    }
+
+    /**
+     * 获取下发单元
+     *
+     * @param softVersion
+     * @param tag
+     * @return
+     */
+    private PointUnit fetchUnit(String softVersion, String tag) {
+        PointUnit pointUnit = null;
+        if (writeFnCacheProvider.containsKey(softVersion)) {
+            List<PointUnit> writeUnitList = (List<PointUnit>) writeFnCacheProvider.get(softVersion);
+
+            for (PointUnit unit : writeUnitList) {
+                List<String> tagList = Arrays.asList(unit.getTags());
+                if (tagList.contains(tag)) {
+
+                    pointUnit = unit;
+                    break;
+                }
+            }
+        }
+
+        return pointUnit;
     }
 
     private byte[] toBytes(int site, int code, int address, int count, int value) {
@@ -194,5 +233,15 @@ public class SetupController {
         buf.writeBytes(CommonUtil.longToBytes(value, count * 2));
 
         return buf.array();
+    }
+
+    private RespBody buildResp(int status, String msg) {
+
+        return new RespBody(status, msg, null);
+    }
+
+    private <T> RespBody buildResp(T data) {
+
+        return new RespBody(1, "", data);
     }
 }

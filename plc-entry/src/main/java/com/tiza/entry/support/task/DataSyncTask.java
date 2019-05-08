@@ -40,7 +40,7 @@ public class DataSyncTask implements ITask {
     @Value("${redis.equipment-detail-key}")
     private String detailKey;
 
-    @Scheduled(fixedDelay = 1 * 60 * 1000, initialDelay = 30 * 1000)
+    @Scheduled(fixedDelay = 3 * 60 * 1000, initialDelay = 30 * 1000)
     public void execute() {
         log.info("定时同步 redis 到数据库 ... ");
 
