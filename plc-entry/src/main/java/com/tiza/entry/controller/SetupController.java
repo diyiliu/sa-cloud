@@ -20,6 +20,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,10 +62,17 @@ public class SetupController {
 
     @GetMapping("/latest")
     @ApiOperation(value = "数据同步", notes = "获取设备最新数据")
-    public RespBody latestData(@RequestParam("equipId") String equipId) {
+    public RespBody latestData(@RequestParam("equipId") String equipId, @RequestParam(required = false) String key) {
         Map dataMap = redisUtil.hgetAll(detailKey + equipId);
         if (MapUtils.isNotEmpty(dataMap)) {
             dataMap.remove("lastTime");
+        }
+
+        // 返回单点值
+        if (StringUtils.isNotEmpty(key)){
+            Object value = dataMap.get(key);
+            dataMap.clear();
+            dataMap.put(key, value);
         }
 
         return buildResp(dataMap);
@@ -72,7 +80,7 @@ public class SetupController {
 
     @PostMapping("/confirm")
     @ApiOperation(value = "数据确认", notes = "确认下发内容")
-    public RespBody confirm(@RequestParam("equipId") long equipId, @RequestParam("key") String key, @RequestParam("value") String value) {
+    public RespBody confirm(@RequestParam("equipId") long equipId, @RequestParam("key") String key) {
         DeviceInfo deviceInfo = deviceInfoJpa.findById(equipId).get();
 
         String dtuId = deviceInfo.getDtuId();
@@ -87,9 +95,11 @@ public class SetupController {
             return buildResp(2, "功能集异常");
         }
 
+        // 获取 redis 最新数据
+        Map dataMap = redisUtil.hgetAll(detailKey + equipId);
         Map paramMap = new HashMap();
-        paramMap.put(key, value);
         if (pointUnit.getTags().length == 1) {
+            paramMap.put(key, dataMap.get(key));
 
             return buildResp(paramMap);
         }
@@ -101,7 +111,6 @@ public class SetupController {
             return buildResp(2, "功能集异常");
         }
 
-        Map dataMap = redisUtil.hgetAll(detailKey + equipId);
         details.forEach(e -> {
             String tag = e.getTag();
             paramMap.put(tag, dataMap.get(tag));
