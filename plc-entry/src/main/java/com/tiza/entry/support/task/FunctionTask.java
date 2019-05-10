@@ -216,7 +216,7 @@ public class FunctionTask implements ITask {
     }
 
     /**
-     * 组合同功能码、同频率下发指令
+     * 组合下发指令
      *
      * @param list
      * @return
@@ -233,6 +233,7 @@ public class FunctionTask implements ITask {
             int gap = type == 4 ? 2 : 1;
 
             QueryFrame query = createFrame(firstPoint);
+            query.setType(type);
             queryFrames.add(query);
             for (int j = i + 1; j < list.size(); j++) {
                 PointUnit unit = list.get(j);
@@ -243,7 +244,6 @@ public class FunctionTask implements ITask {
 
                     PointUnit last = list.get(i);
                     query.setCount(last.getAddress() - firstPoint.getAddress() + gap);
-
                     break;
                 }
 
@@ -268,7 +268,12 @@ public class FunctionTask implements ITask {
         query.setSite(unit.getSiteId());
         query.setCode(unit.getReadFunction());
         query.setStart(unit.getAddress());
-        query.setCount(unit.getType() == 4 ? 2 : 1);
+        int type = unit.getType();
+        if (type == 5) {
+            query.setCount(unit.getTags().length);
+        } else {
+            query.setCount(unit.getType() == 4 ? 2 : 1);
+        }
         unit.setQueryFrame(query);
 
         List<PointUnit> units = new ArrayList();

@@ -69,7 +69,7 @@ public class SetupController {
         }
 
         // 返回单点值
-        if (StringUtils.isNotEmpty(key)){
+        if (StringUtils.isNotEmpty(key)) {
             Object value = dataMap.get(key);
             dataMap.clear();
             dataMap.put(key, value);
@@ -121,39 +121,54 @@ public class SetupController {
 
     @PostMapping("/setup")
     @ApiOperation(value = "参数设置", notes = "设置设备参数")
-    public RespBody setup(@RequestParam("key") String key, @RequestParam("value") String value,
-                          @RequestParam("equipId") long equipId, @RequestParam("rowId") Long rowId, @RequestBody(required = false) String jsonBody) throws IOException {
+    public RespBody setup(@RequestParam("equipId") long equipId, @RequestParam("rowId") Long rowId, @RequestBody String jsonBody) throws IOException {
+        Map<String, String> tagMap = JacksonUtil.toObject(jsonBody, HashMap.class);
+        if (MapUtils.isEmpty(tagMap)) {
+            return buildResp(2, "下发内容不能为空");
+        }
+
+        String key = "";
+        for (String tag : tagMap.keySet()) {
+            key = tag;
+            break;
+        }
 
         DeviceInfo deviceInfo = deviceInfoJpa.findById(equipId).get();
         PointUnit pointUnit = fetchUnit(deviceInfo.getSoftVersion(), key);
-
-        // 设置值转int
-        int val;
-        if (value.indexOf(".") > 0) {
-            val = Float.floatToIntBits(Float.parseFloat(value));
-        } else {
-            val = Integer.parseInt(value);
+        if (pointUnit == null) {
+            return buildResp(2, "功能集异常");
         }
 
         // 寄存器数量(dword类型为2, 其他均为1)
-        int count;
+        int count = 1;
         // 从站地址
         int side;
         // 起始地址
         int address;
+        // 设置值
+        int val;
 
         // 单点下发
         if (1 == pointUnit.getTags().length) {
             PointInfo pointInfo = pointUnit.getPoints()[0];
-
             int type = pointInfo.getPointType();
+
             // 寄存器数量
-            count = type == 4 ? 2 : 1;
+            if (type == 4) {
+                count = 2;
+            }
             side = pointInfo.getSiteId();
             address = pointInfo.getAddress();
-        } else {
-            Map tagMap = JacksonUtil.toObject(jsonBody, HashMap.class);
 
+            String value = tagMap.get(key);
+            if (value.indexOf(".") > 0) {
+                val = Float.floatToIntBits(Float.parseFloat(value));
+            } else {
+                val = Integer.parseInt(value);
+            }
+        }
+        // 多点组合
+        else {
             String[] tags = pointUnit.getTags();
             int length = tags.length;
             StringBuilder strBuf = new StringBuilder();
@@ -165,9 +180,6 @@ public class SetupController {
                     if (tagMap.containsKey(tag)) {
                         v = String.valueOf(tagMap.get(tag));
                     }
-                    if (key.equals(tag)) {
-                        v = value;
-                    }
                     strBuf.append(v);
                 } else {
                     strBuf.append("0");
@@ -177,10 +189,10 @@ public class SetupController {
             byte[] bytes = CommonUtil.binaryStr2Bytes(binaryStr);
             val = CommonUtil.byte2int(bytes);
 
-            count = 1;
             side = pointUnit.getSiteId();
             address = pointUnit.getAddress();
         }
+
         // 下发单元
         List<PointUnit> unitList = new ArrayList();
         unitList.add(pointUnit);
@@ -189,7 +201,6 @@ public class SetupController {
         String dtuId = deviceInfo.getDtuId();
         // 功能码
         int code = pointUnit.getWriteFunction();
-
         byte[] bytes = toBytes(side, code, address, count, val);
         SendMsg sendMsg = new SendMsg();
         sendMsg.setRowId(rowId);
@@ -202,7 +213,7 @@ public class SetupController {
         sendMsg.setTags(pointUnit.getTags());
 
         senderTask.toSend(sendMsg);
-        log.info("设备[{}]参数[{},{}]等待下发[{}]...", dtuId, key, value, CommonUtil.bytesToStr(bytes));
+        log.info("设备[{}]参数[{}]等待下发[{}]...", dtuId, jsonBody, CommonUtil.bytesToStr(bytes));
 
         return buildResp(1, "下发成功");
     }

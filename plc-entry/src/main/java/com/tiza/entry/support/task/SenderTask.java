@@ -106,24 +106,16 @@ public class SenderTask implements ITask {
     }
 
     private SendMsg buildMsg(String deviceId, QueryFrame queryFrame) {
-        List<PointUnit> units = queryFrame.getPointUnits();
-        int type = units.get(0).getType();
-
         int site = queryFrame.getSite();
         int code = queryFrame.getCode();
         int start = queryFrame.getStart();
         int count = queryFrame.getCount();
 
-        List<PointUnit> unitList = queryFrame.getPointUnits();
-        if (type == 5) {
-            count = unitList.get(0).getPoints().length;
-        }
-
         SendMsg sendMsg = produceMsg(site, code, start, count);
         sendMsg.setDeviceId(deviceId);
         // 0: 查询; 1: 设置
         sendMsg.setType(0);
-        sendMsg.setUnitList(unitList);
+        sendMsg.setUnitList(queryFrame.getPointUnits());
 
         return sendMsg;
     }

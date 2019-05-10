@@ -90,16 +90,15 @@ public class DtuDataProcess implements Runnable {
                         continue;
                     }
 
-                    log.info("设备[{}]收到数据: [{}]", device, bytesStr);
                     if (!sendCacheProvider.containsKey(device)) {
-                        log.error("数据异常, 找不到下行数据与之对应。");
                         continue;
                     }
+                    log.info("设备[{}]收到数据: [{}]", device, bytesStr);
 
                     MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(device);
                     SendMsg sendMsg = msgMemory.getCurrent();
                     if (sendMsg == null || sendMsg.getResult() == 1) {
-                        log.error("过滤异常数据。");
+                        log.error("忽略设备[{}]过期数据[{}]!", device, bytesStr);
                         continue;
                     }
 
@@ -120,8 +119,8 @@ public class DtuDataProcess implements Runnable {
                         String[] strArray = key.split(":");
                         int realSite = Integer.valueOf(strArray[0]);
                         int realCode = Integer.valueOf(strArray[1]);
-                        // int start = Integer.valueOf(strArray[2]);
                         int realCount = Integer.valueOf(strArray[3]);
+
                         if (5 == dataType) {
                             realCount /= 8;
                         } else {
@@ -133,13 +132,13 @@ public class DtuDataProcess implements Runnable {
                                     device, site, realSite, code, realCode, count, realCount);
                             continue;
                         }
+                        // 修改下发消息状态
+                        sendMsg.setResult(1);
 
                         DtuHeader dtuHeader = new DtuHeader();
                         dtuHeader.setDeviceId(device);
-                        dtuHeader.setAddress(site);
-                        dtuHeader.setCode(code);
                         dtuHeader.setContent(content);
-
+                        dtuHeader.setSendMsg(sendMsg);
                         modbusParser.parse(content, dtuHeader);
                     }
 

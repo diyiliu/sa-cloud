@@ -16,9 +16,7 @@ public class DtuHeader extends Header {
 
     private String deviceId;
 
-    private int address;
-
-    private int code;
-
     private byte[] content = new byte[0];
+
+    private SendMsg sendMsg;
 }

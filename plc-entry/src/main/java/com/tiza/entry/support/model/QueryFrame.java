@@ -1,7 +1,8 @@
 package com.tiza.entry.support.model;
 
+import lombok.Data;
+
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Description: QueryFrame
@@ -9,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Update: 2018-01-30 09:10
  */
 
+@Data
 public class QueryFrame {
 
     /** 从站地址 */
@@ -26,43 +28,16 @@ public class QueryFrame {
     /** 功能集中的点 */
     private List<PointUnit> pointUnits;
 
-    public int getCount() {
-        return count;
-    }
+    /** 类型(1:bit;2:byte;3:word;4:dword;5:digital)*/
+    private int type;
 
-    public void setCount(int count) {
-        this.count = count;
-    }
+    /**
+     * 下发标识
+     *
+     * @return
+     */
+    public String getKey(){
 
-    public int getSite() {
-        return site;
-    }
-
-    public void setSite(int site) {
-        this.site = site;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public int getStart() {
-        return start;
-    }
-
-    public void setStart(int start) {
-        this.start = start;
-    }
-
-    public List<PointUnit> getPointUnits() {
-        return pointUnits;
-    }
-
-    public void setPointUnits(List<PointUnit> pointUnits) {
-        this.pointUnits = pointUnits;
+        return site + ":" + code + ":" + start + ":" + count;
     }
 }

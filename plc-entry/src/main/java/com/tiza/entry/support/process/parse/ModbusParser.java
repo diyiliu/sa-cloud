@@ -42,9 +42,6 @@ public class ModbusParser extends DataProcessAdapter {
     private ICache deviceCacheProvider;
 
     @Resource
-    private ICache sendCacheProvider;
-
-    @Resource
     private ICache faultCacheProvider;
 
     @Resource
@@ -69,6 +66,7 @@ public class ModbusParser extends DataProcessAdapter {
     public void parse(byte[] content, Header header) {
         DtuHeader dtuHeader = (DtuHeader) header;
         String deviceId = dtuHeader.getDeviceId();
+        SendMsg sendMsg = dtuHeader.getSendMsg();
         if (!deviceCacheProvider.containsKey(deviceId)) {
 
             log.warn("设备不存在[{}]!", deviceId);
@@ -79,15 +77,6 @@ public class ModbusParser extends DataProcessAdapter {
         DeviceInfo deviceInfo = (DeviceInfo) deviceCacheProvider.get(deviceId);
         long equipId = deviceInfo.getId();
 
-        MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
-        SendMsg sendMsg = msgMemory.getCurrent();
-        if (1 == sendMsg.getResult()) {
-            return;
-        }
-        sendMsg.setResult(1);
-
-        // 加入历史下发缓存
-        msgMemory.getMsgMap().put(sendMsg.getKey(), sendMsg);
 
         StoreGroup storeGroup = new StoreGroup();
         // 当前表
