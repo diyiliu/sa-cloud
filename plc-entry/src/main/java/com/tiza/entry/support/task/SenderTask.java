@@ -270,7 +270,7 @@ public class SenderTask implements ITask {
             if (current != null && current.getResult() == 0) {
                 //  超时丢弃未应答指令
                 if (System.currentTimeMillis() - current.getDateTime() > 20 * 1000) {
-                    log.info("设备[{}]丢弃超时未应答指令[{}]!", current.getDeviceId(), CommonUtil.bytesToStr(current.getBytes()));
+                    log.warn("设备[{}]丢弃超时未应答指令[{}]!", current.getDeviceId(), CommonUtil.bytesToStr(current.getBytes()));
                     current.setResult(1);
                     if (current.getType() == 1) {
                         updateLog(current, 4, "");

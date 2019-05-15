@@ -98,7 +98,7 @@ public class DtuDataProcess implements Runnable {
                     MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(device);
                     SendMsg sendMsg = msgMemory.getCurrent();
                     if (sendMsg == null || sendMsg.getResult() == 1) {
-                        log.error("忽略设备[{}]过期数据[{}]!", device, bytesStr);
+                        log.warn("忽略设备[{}]过期数据[{}]!", device, bytesStr);
                         continue;
                     }
 
@@ -128,7 +128,7 @@ public class DtuDataProcess implements Runnable {
                         }
 
                         if (site != realSite || code != realCode || count != realCount) {
-                            log.error("设备[{}], 从站地址[{}, {}], 功能码[{}, {}], 长度[{}, {}], 上下行不匹配!",
+                            log.warn("设备[{}], 从站地址[{}, {}], 功能码[{}, {}], 长度[{}, {}], 上下行不匹配!",
                                     device, site, realSite, code, realCode, count, realCount);
                             continue;
                         }

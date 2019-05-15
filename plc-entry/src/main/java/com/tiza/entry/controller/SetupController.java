@@ -160,7 +160,7 @@ public class SetupController {
             side = pointInfo.getSiteId();
             address = pointInfo.getAddress();
 
-            String value = tagMap.get(key);
+            String value = String.valueOf(tagMap.get(key));
             if (value.indexOf(".") > 0) {
                 val = Float.floatToIntBits(Float.parseFloat(value));
             } else {
