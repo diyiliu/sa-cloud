@@ -122,7 +122,8 @@ public class DtuDataProcess implements Runnable {
                         int realCount = Integer.valueOf(strArray[3]);
 
                         if (5 == dataType) {
-                            realCount /= 8;
+                            int n = realCount / 8;
+                            realCount = realCount % 8 == 0 ? n : n + 1;
                         } else {
                             realCount *= 2;
                         }

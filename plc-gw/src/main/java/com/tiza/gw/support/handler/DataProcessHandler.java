@@ -74,6 +74,11 @@ public class DataProcessHandler {
             if (!queue.isEmpty()) {
                 byte[] bytes = queue.poll();
                 ctx.writeAndFlush(Unpooled.copiedBuffer(bytes));
+
+                while (!queue.isEmpty()){
+                    bytes = queue.poll();
+                    log.warn("设备[{}]清理过期数据[{}]", deviceId, CommonUtil.bytesToStr(bytes));
+                }
             }
         }
     }

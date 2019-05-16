@@ -47,8 +47,8 @@ public class RedisMsgListener extends JedisPubSub {
                 singlePool.setDevice(device);
                 DataProcessHandler.DEVICE_POOL.put(device, singlePool);
             }
-
-            singlePool.getPool().add(bytes);
+            // 实时下发
+            singlePool.getPool().addFirst(bytes);
         } catch (IOException e) {
             e.printStackTrace();
         }

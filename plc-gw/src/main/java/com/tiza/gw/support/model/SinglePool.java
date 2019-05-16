@@ -2,8 +2,8 @@ package com.tiza.gw.support.model;
 
 import lombok.Data;
 
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Queue;
 
 /**
  * Description: SinglePool
@@ -16,5 +16,5 @@ public class SinglePool {
 
     private String device;
 
-    private Queue<byte[]> pool = new LinkedList();
+    private Deque<byte[]> pool = new LinkedList();
 }
