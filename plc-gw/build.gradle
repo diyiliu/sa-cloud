@@ -48,7 +48,7 @@ buildscript {
 }
 
 shadowJar {
-    baseName = 'sa-gw'
+    baseName = 'plc-gw'
     classifier = null
     version = null
     mergeServiceFiles('META-INF/spring.*')

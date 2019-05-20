@@ -8,27 +8,26 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: 'jdbc:mysql://192.168.1.51:3306/shangair?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&verifyServerCertificate=false&useSSL=false'
+    url: 'jdbc:mysql://192.168.1.110:3306/shangair?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&verifyServerCertificate=false&useSSL=false'
     username: root
-    password: 123456
+    password: admin@123
 
   jpa:
     show-sql: false
 
-
 kafka:
-  broker-list: xg153:9092,xg154:9092,xg155:9092
-  zk-connect: xg153:2181,xg154:2181,xg155:2181
+  broker-list: HighPressData01:9092,HighPressData02:9092,HighPressData03:9092
+  zk-connect: HighPressData01:2181,HighPressData02:2181,HighPressData03:2181
   raw-topic: shangair_rawdata
   data-topic: shangair_metrics
 
 hbase:
-  zk-quorum: 192.168.1.153,192.168.1.154,192.168.1.155
+  zk-quorum: 192.168.1.111,192.168.1.112,192.168.1.113
   zk-port: 2181
   data-table: tcloud:shangair_metrics
 
 redis:
-  host: 192.168.1.156
+  host: 192.168.1.113
   port: 6379
   password:
   database: 0

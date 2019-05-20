@@ -76,10 +76,9 @@ public class DataSyncTask implements ITask {
                 Object val = dataMap.get(key);
                 list.add(val);
             }
-
-            // log.info("[更新] 设备[{}]当前信息...", id);
             String sql = sqlBuilder.substring(0, sqlBuilder.length() - 2) + " WHERE equipmentId=" + id;
             jdbcTemplate.update(sql, list.toArray());
+            //log.info("[更新] 设备[{}]当前信息 ...", id);
         }
     }
 
@@ -107,8 +106,8 @@ public class DataSyncTask implements ITask {
                 list.add(args);
             }
 
-            // log.info("[更新] 设备[{}]详细信息...", id);
             jdbcTemplate.batchUpdate(sql, list);
+            //log.info("[更新] 设备[{}]详细信息 ...", id);
         }
     }
 

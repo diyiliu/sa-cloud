@@ -57,8 +57,9 @@ public class EntryConfig {
         props.put("zookeeper.session.timeout.ms", "400");
         props.put("zookeeper.sync.time.ms", "200");
         props.put("auto.commit.interval.ms", "1000");
-        // 设置消费位置
-        props.put("auto.offset.reset", "smallest");
+        props.put("enable.auto.commit", "true");
+        // 设置消费位置 smallest 最小 largest 最大
+        props.put("auto.offset.reset", "largest");
 
         ConsumerConfig consumerConfig = new ConsumerConfig(props);
         ConsumerConnector consumer = kafka.consumer.Consumer.createJavaConsumerConnector(consumerConfig);
