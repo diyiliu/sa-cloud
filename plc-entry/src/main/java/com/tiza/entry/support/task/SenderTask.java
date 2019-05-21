@@ -74,7 +74,7 @@ public class SenderTask implements ITask {
     private String pubChannel;
 
 
-    @Scheduled(fixedRate = 10 * 1000, initialDelay = 5 * 1000)
+    @Scheduled(fixedDelay = 3 * 1000, initialDelay = 5 * 1000)
     public void execute() {
         Set set = onlineCacheProvider.getKeys();
         for (Iterator iterator = set.iterator(); iterator.hasNext(); ) {
@@ -98,7 +98,10 @@ public class SenderTask implements ITask {
 
                     for (QueryFrame frame : frameList) {
                         SendMsg msg = buildMsg(deviceId, frame);
-                        toSend(msg);
+                        if (onTime(deviceId, msg.getKey(), frame.getFrequency())) {
+
+                            toSend(msg);
+                        }
                     }
                 }
             }
@@ -179,7 +182,8 @@ public class SenderTask implements ITask {
     private void publish(MsgPool pool) {
         final String deviceId = pool.getDeviceId();
         executor.execute(() -> {
-            try {
+            JedisPool jedisPool = redisUtil.getPool();
+            try (Jedis jedis = jedisPool.getResource()) {
                 Queue<SendMsg> msgPool = pool.getMsgQueue();
                 while (!msgPool.isEmpty()) {
                     if (!isBlock(deviceId)) {
@@ -203,26 +207,23 @@ public class SenderTask implements ITask {
                         msg.setDateTime(System.currentTimeMillis());
                         msgMemory.setCurrent(msg);
 
-                        JedisPool jedisPool = redisUtil.getPool();
-                        try (Jedis jedis = jedisPool.getResource()) {
-                            SubMsg subMsg = new SubMsg();
-                            subMsg.setDevice(deviceId);
-                            subMsg.setKey(key);
-                            subMsg.setType(msg.getType());
-                            subMsg.setData(CommonUtil.bytesToStr(msg.getBytes()));
-                            subMsg.setTime(System.currentTimeMillis());
+                        SubMsg subMsg = new SubMsg();
+                        subMsg.setDevice(deviceId);
+                        subMsg.setKey(key);
+                        subMsg.setType(msg.getType());
+                        subMsg.setData(CommonUtil.bytesToStr(msg.getBytes()));
+                        subMsg.setTime(System.currentTimeMillis());
 
-                            String dataJson = JacksonUtil.toJson(subMsg);
-                            jedis.publish(pubChannel, dataJson);
-                            log.info("发布 Redis: [{}]", dataJson);
-                        }
+                        String dataJson = JacksonUtil.toJson(subMsg);
+                        jedis.publish(pubChannel, dataJson);
+                        log.info("发布 Redis: [{}]", dataJson);
 
                         // 参数设置
                         if (1 == msg.getType()) {
                             updateLog(msg, 1, "");
                         }
                     }
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -285,6 +286,37 @@ public class SenderTask implements ITask {
         }
 
         return false;
+    }
+
+    /**
+     * 校验查询频率
+     *
+     * @param qKey
+     * @param interval
+     * @return
+     */
+    private boolean onTime(String deviceId, String qKey, long interval) {
+        if (sendCacheProvider.containsKey(deviceId)) {
+            MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
+            SendMsg msg = msgMemory.getMsgMap().get(qKey);
+            if (msg == null) {
+
+                return true;
+            }
+
+            // 超过3分钟
+            if ((System.currentTimeMillis() - msg.getDateTime()) * 0.001 > 3 * 60) {
+
+                return true;
+            }
+
+            if ((System.currentTimeMillis() - msg.getDateTime()) * 0.001 < interval) {
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

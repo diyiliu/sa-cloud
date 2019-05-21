@@ -268,6 +268,7 @@ public class FunctionTask implements ITask {
         query.setSite(unit.getSiteId());
         query.setCode(unit.getReadFunction());
         query.setStart(unit.getAddress());
+        query.setFrequency(unit.getFrequency());
         int type = unit.getType();
         if (type == 5) {
             query.setCount(unit.getTags().length);

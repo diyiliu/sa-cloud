@@ -45,7 +45,7 @@ public class DtuServer {
                             protected void initChannel(SocketChannel ch) {
                                 ch.pipeline().addLast(new DtuEncoder())
                                         .addLast(new DtuDecoder())
-                                        .addLast(new IdleStateHandler(0, 0, 3000, TimeUnit.MILLISECONDS))
+                                        .addLast(new IdleStateHandler(0, 0, 500, TimeUnit.MILLISECONDS))
                                         .addLast(new DtuHandler());
                             }
                         });

@@ -93,7 +93,7 @@ public class DtuDataProcess implements Runnable {
                     if (!sendCacheProvider.containsKey(device)) {
                         continue;
                     }
-                    log.info("设备[{}]收到数据: [{}]", device, bytesStr);
+                    // log.info("设备[{}]收到数据: [{}]", device, bytesStr);
 
                     MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(device);
                     SendMsg sendMsg = msgMemory.getCurrent();
@@ -105,6 +105,9 @@ public class DtuDataProcess implements Runnable {
                     int type = sendMsg.getType();
                     // 查询匹配 从站地址, 功能码
                     if (type == 0) {
+                        // 加入下发缓存
+                        msgMemory.getMsgMap().put(sendMsg.getKey(), sendMsg);
+
                         // 字节数
                         int count = byteBuf.readUnsignedByte();
                         byte[] content = new byte[count];

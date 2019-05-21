@@ -31,6 +31,9 @@ public class QueryFrame {
     /** 类型(1:bit;2:byte;3:word;4:dword;5:digital)*/
     private int type;
 
+    /** 查询频率*/
+    private long frequency;
+
     /**
      * 下发标识
      *

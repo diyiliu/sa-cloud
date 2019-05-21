@@ -31,7 +31,7 @@ public class RedisMsgListener extends JedisPubSub {
 
     @Override
     public void onMessage(String channel, String message) {
-        log.info("准备下发消息: [{}]", message);
+        //log.info("准备下发消息: [{}]", message);
 
         try {
             SubMsg msg = JacksonUtil.toObject(message, SubMsg.class);
