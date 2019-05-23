@@ -33,7 +33,6 @@ public class KeepAliveTask implements ITask {
     @Scheduled(fixedDelay = 30 * 1000)
     public void execute() {
         // log.info("设备在线检测 ... ");
-
         Set<Object> keys = onlineCacheProvider.getKeys();
         for (Iterator iter = keys.iterator(); iter.hasNext(); ) {
 

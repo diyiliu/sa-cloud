@@ -9,10 +9,14 @@ import com.tiza.air.model.SubMsg;
 import com.tiza.entry.support.facade.SendLogJpa;
 import com.tiza.entry.support.facade.dto.DeviceInfo;
 import com.tiza.entry.support.facade.dto.SendLog;
-import com.tiza.entry.support.model.*;
+import com.tiza.entry.support.model.MsgMemory;
+import com.tiza.entry.support.model.MsgPool;
+import com.tiza.entry.support.model.QueryFrame;
+import com.tiza.entry.support.model.SendMsg;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,34 +77,33 @@ public class SenderTask implements ITask {
     @Value("${redis.channel}")
     private String pubChannel;
 
-
-    @Scheduled(fixedDelay = 3 * 1000, initialDelay = 5 * 1000)
+    @Scheduled(fixedRate = 10 * 1000, initialDelay = 5 * 1000)
     public void execute() {
         Set set = onlineCacheProvider.getKeys();
+        log.info("在线设备列表: {}", JacksonUtil.toJson(set));
+
         for (Iterator iterator = set.iterator(); iterator.hasNext(); ) {
             String deviceId = (String) iterator.next();
-
             if (!deviceCacheProvider.containsKey(deviceId)) {
+                log.warn("设备[{}]未注册", deviceId);
                 continue;
             }
+
             DeviceInfo deviceInfo = (DeviceInfo) deviceCacheProvider.get(deviceId);
             String version = deviceInfo.getSoftVersion();
-
             Map<Integer, List<QueryFrame>> fnQuery = (Map<Integer, List<QueryFrame>>) queryGroupCache.get(version);
+
             if (MapUtils.isNotEmpty(fnQuery)) {
                 for (Iterator<Integer> iter = fnQuery.keySet().iterator(); iter.hasNext(); ) {
                     int fnCode = iter.next();
 
                     List<QueryFrame> frameList = fnQuery.get(fnCode);
-                    if (frameList.size() < 1) {
-                        continue;
-                    }
-
-                    for (QueryFrame frame : frameList) {
-                        SendMsg msg = buildMsg(deviceId, frame);
-                        if (onTime(deviceId, msg.getKey(), frame.getFrequency())) {
-
-                            toSend(msg);
+                    if (CollectionUtils.isNotEmpty(frameList)) {
+                        for (QueryFrame frame : frameList) {
+                            SendMsg msg = buildMsg(deviceId, frame);
+                            if (onTime(deviceId, msg.getKey(), frame.getFrequency())) {
+                                toSend(msg);
+                            }
                         }
                     }
                 }
@@ -169,6 +172,7 @@ public class SenderTask implements ITask {
         }
 
         if (!threadPool.contains(deviceId)) {
+            log.info("设备[{}]开启线程 ... ", deviceId);
             threadPool.add(deviceId);
             publish(pool);
         }
@@ -216,18 +220,19 @@ public class SenderTask implements ITask {
 
                         String dataJson = JacksonUtil.toJson(subMsg);
                         jedis.publish(pubChannel, dataJson);
-                        log.info("发布 Redis: [{}]", dataJson);
+                        log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
 
                         // 参数设置
                         if (1 == msg.getType()) {
                             updateLog(msg, 1, "");
                         }
                     }
-                    Thread.sleep(1000);
+                    Thread.sleep(3000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
+                log.info("设备[{}]退出线程 ... ", deviceId);
                 threadPool.remove(deviceId);
             }
         });
@@ -270,8 +275,8 @@ public class SenderTask implements ITask {
             SendMsg current = msgMemory.getCurrent();
             if (current != null && current.getResult() == 0) {
                 //  超时丢弃未应答指令
-                if (System.currentTimeMillis() - current.getDateTime() > 20 * 1000) {
-                    log.warn("设备[{}]丢弃超时未应答指令[{}]!", current.getDeviceId(), CommonUtil.bytesToStr(current.getBytes()));
+                if (System.currentTimeMillis() - current.getDateTime() > 10 * 1000) {
+                    log.warn("设备[{}]丢弃超时未应答指令[{}]", deviceId, current.getKey());
                     current.setResult(1);
                     if (current.getType() == 1) {
                         updateLog(current, 4, "");
@@ -281,6 +286,7 @@ public class SenderTask implements ITask {
 
                 }
 
+                log.info("设备[{}]阻塞[{}]等待中 ... ", deviceId, current.getKey());
                 return true;
             }
         }
@@ -304,14 +310,13 @@ public class SenderTask implements ITask {
                 return true;
             }
 
-            // 超过3分钟
-            if ((System.currentTimeMillis() - msg.getDateTime()) * 0.001 > 3 * 60) {
+            // 时间间隔 秒
+            double nowGap = System.currentTimeMillis() - msg.getDateTime() * 0.001;
+            // 系统默认最大间隔
+            int max = 3 * 60;
 
-                return true;
-            }
-
-            if ((System.currentTimeMillis() - msg.getDateTime()) * 0.001 < interval) {
-
+            interval = interval > max ? max : interval;
+            if (nowGap < interval) {
                 return false;
             }
         }
