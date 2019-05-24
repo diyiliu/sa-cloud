@@ -227,7 +227,7 @@ public class SenderTask implements ITask, InitializingBean {
                             updateLog(msg, 1, "");
                         }
                     }
-                    Thread.sleep(3000);
+                    Thread.sleep(2000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -286,7 +286,7 @@ public class SenderTask implements ITask, InitializingBean {
 
                 }
 
-                log.info("设备[{}]阻塞[{}]等待中 ... ", deviceId, current.getKey());
+                // log.info("设备[{}]阻塞[{}]等待中 ... ", deviceId, current.getKey());
                 return true;
             }
         }

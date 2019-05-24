@@ -39,6 +39,9 @@ public class DtuDataProcess implements Runnable {
     private ConsumerConnector consumer;
 
     @Resource
+    private ICache deviceCacheProvider;
+
+    @Resource
     private ICache onlineCacheProvider;
 
     @Resource
@@ -74,6 +77,11 @@ public class DtuDataProcess implements Runnable {
 
                 String bytesStr = (String) dataMap.get("data");
                 byte[] bytes = CommonUtil.hexStringToBytes(bytesStr);
+
+                if (!deviceCacheProvider.containsKey(device)){
+                    log.warn("设备[{}]未注册", device);
+                    continue;
+                }
 
                 ByteBuf byteBuf = Unpooled.copiedBuffer(bytes);
                 // 从站地址
