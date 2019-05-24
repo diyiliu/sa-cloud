@@ -19,18 +19,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Description: SenderTask
@@ -40,7 +38,10 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
-public class SenderTask implements ITask {
+public class SenderTask implements ITask, InitializingBean {
+    /** 主定时任务 **/
+    private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+
     /**
      * 线程管理器
      **/
@@ -77,7 +78,6 @@ public class SenderTask implements ITask {
     @Value("${redis.channel}")
     private String pubChannel;
 
-    @Scheduled(fixedRate = 10 * 1000, initialDelay = 5 * 1000)
     public void execute() {
         Set set = onlineCacheProvider.getKeys();
         log.info("在线设备列表: {}", JacksonUtil.toJson(set));
@@ -220,7 +220,7 @@ public class SenderTask implements ITask {
 
                         String dataJson = JacksonUtil.toJson(subMsg);
                         jedis.publish(pubChannel, dataJson);
-                        log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
+                        // log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
 
                         // 参数设置
                         if (1 == msg.getType()) {
@@ -313,7 +313,7 @@ public class SenderTask implements ITask {
             // 时间间隔 秒
             double nowGap = System.currentTimeMillis() - msg.getDateTime() * 0.001;
             // 系统默认最大间隔
-            int max = 3 * 60;
+            int max = 5 * 60;
 
             interval = interval > max ? max : interval;
             if (nowGap < interval) {
@@ -340,5 +340,10 @@ public class SenderTask implements ITask {
             sendLog.setReplyData(replyMsg);
             sendLogJpa.save(sendLog);
         }
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        scheduledExecutor.scheduleAtFixedRate(() -> execute(), 10, 5, TimeUnit.SECONDS);
     }
 }
