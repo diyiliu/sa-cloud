@@ -39,7 +39,9 @@ import java.util.concurrent.*;
 @Slf4j
 @Service
 public class SenderTask implements ITask, InitializingBean {
-    /** 主定时任务 **/
+    /**
+     * 主定时任务
+     **/
     private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
     /**
@@ -220,14 +222,14 @@ public class SenderTask implements ITask, InitializingBean {
 
                         String dataJson = JacksonUtil.toJson(subMsg);
                         jedis.publish(pubChannel, dataJson);
-                        // log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
+                        log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
 
                         // 参数设置
                         if (1 == msg.getType()) {
                             updateLog(msg, 1, "");
                         }
                     }
-                    Thread.sleep(2000);
+                    Thread.sleep(3000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -275,7 +277,7 @@ public class SenderTask implements ITask, InitializingBean {
             SendMsg current = msgMemory.getCurrent();
             if (current != null && current.getResult() == 0) {
                 //  超时丢弃未应答指令
-                if (System.currentTimeMillis() - current.getDateTime() > 10 * 1000) {
+                if (System.currentTimeMillis() - current.getDateTime() > 30 * 1000) {
                     log.warn("设备[{}]丢弃超时未应答指令[{}]", deviceId, current.getKey());
                     current.setResult(1);
                     if (current.getType() == 1) {
@@ -283,7 +285,6 @@ public class SenderTask implements ITask, InitializingBean {
                     }
 
                     return false;
-
                 }
 
                 // log.info("设备[{}]阻塞[{}]等待中 ... ", deviceId, current.getKey());
@@ -313,7 +314,7 @@ public class SenderTask implements ITask, InitializingBean {
             // 时间间隔 秒
             double nowGap = System.currentTimeMillis() - msg.getDateTime() * 0.001;
             // 系统默认最大间隔
-            int max = 5 * 60;
+            int max = 3 * 60;
 
             interval = interval > max ? max : interval;
             if (nowGap < interval) {

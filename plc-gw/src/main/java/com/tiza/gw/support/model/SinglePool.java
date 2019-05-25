@@ -1,5 +1,6 @@
 package com.tiza.gw.support.model;
 
+import com.tiza.air.model.SubMsg;
 import lombok.Data;
 
 import java.util.Deque;
@@ -16,5 +17,5 @@ public class SinglePool {
 
     private String device;
 
-    private Deque<byte[]> pool = new LinkedList();
+    private Deque<SubMsg> pool = new LinkedList();
 }

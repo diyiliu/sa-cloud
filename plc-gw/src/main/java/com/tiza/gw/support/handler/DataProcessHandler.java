@@ -3,9 +3,11 @@ package com.tiza.gw.support.handler;
 import com.diyiliu.plugin.cache.ICache;
 import com.diyiliu.plugin.model.MsgPipeline;
 import com.diyiliu.plugin.util.CommonUtil;
+import com.diyiliu.plugin.util.DateUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
 import com.tiza.air.cluster.KafkaUtil;
 import com.tiza.air.model.KafkaMsg;
+import com.tiza.air.model.SubMsg;
 import com.tiza.gw.support.model.SinglePool;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.security.auth.Subject;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -69,15 +73,20 @@ public class DataProcessHandler {
     public void idle(String deviceId, ChannelHandlerContext ctx) {
         if (DataProcessHandler.DEVICE_POOL.containsKey(deviceId)) {
             SinglePool singlePool = DataProcessHandler.DEVICE_POOL.get(deviceId);
-            Queue<byte[]> queue = singlePool.getPool();
+            Queue<SubMsg> queue = singlePool.getPool();
 
             if (!queue.isEmpty()) {
-                byte[] bytes = queue.poll();
-                ctx.writeAndFlush(Unpooled.copiedBuffer(bytes));
+                SubMsg msg = queue.poll();
+                if (System.currentTimeMillis() - msg.getTime() < 5 * 1000) {
+                    byte[] bytes = CommonUtil.hexStringToBytes(msg.getData());
+                    ctx.writeAndFlush(Unpooled.copiedBuffer(bytes));
+                } else {
+                    log.warn("设备[{}]指令过期[{{}, {}]", deviceId, DateUtil.dateToString(new Date(msg.getTime())), JacksonUtil.toJson(msg));
+                }
 
-                while (!queue.isEmpty()){
-                    bytes = queue.poll();
-                    log.warn("设备[{}]清理过期数据[{}]", deviceId, CommonUtil.bytesToStr(bytes));
+                while (!queue.isEmpty()) {
+                    msg = queue.poll();
+                    log.warn("设备[{}]清理历史数据[{}]", deviceId, JacksonUtil.toJson(msg));
                 }
             }
         }

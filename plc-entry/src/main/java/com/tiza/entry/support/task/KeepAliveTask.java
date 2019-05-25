@@ -22,7 +22,7 @@ import java.util.Set;
 @Slf4j
 @Service
 public class KeepAliveTask implements ITask {
-    private final static int INTERVAL_TIME = 2; // 分钟
+    private final static int INTERVAL_TIME = 1; // 分钟
 
     @Resource
     private ICache onlineCacheProvider;
@@ -32,7 +32,7 @@ public class KeepAliveTask implements ITask {
 
     @Scheduled(fixedDelay = 30 * 1000)
     public void execute() {
-        // log.info("设备在线检测 ... ");
+        log.info("设备在线检测 ... ");
         Set<Object> keys = onlineCacheProvider.getKeys();
         for (Iterator iter = keys.iterator(); iter.hasNext(); ) {
 

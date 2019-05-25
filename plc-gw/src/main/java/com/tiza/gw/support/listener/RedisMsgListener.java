@@ -1,6 +1,5 @@
 package com.tiza.gw.support.listener;
 
-import com.diyiliu.plugin.util.CommonUtil;
 import com.diyiliu.plugin.util.JacksonUtil;
 import com.tiza.air.model.SubMsg;
 import com.tiza.gw.support.handler.DataProcessHandler;
@@ -18,7 +17,6 @@ import java.util.concurrent.Executors;
  * Description: RedisMsgListener
  * Author: DIYILIU
  * Update: 2019-04-24 09:34
- *
  */
 
 @Slf4j
@@ -31,32 +29,30 @@ public class RedisMsgListener extends JedisPubSub {
 
     @Override
     public void onMessage(String channel, String message) {
-        //log.info("准备下发消息: [{}]", message);
+        log.info("准备下发消息: [{}]", message);
 
         try {
             SubMsg msg = JacksonUtil.toObject(message, SubMsg.class);
-
             String device = msg.getDevice();
-            byte[] bytes = CommonUtil.hexStringToBytes(msg.getData());
 
             SinglePool singlePool;
-            if (DataProcessHandler.DEVICE_POOL.containsKey(device)){
+            if (DataProcessHandler.DEVICE_POOL.containsKey(device)) {
                 singlePool = DataProcessHandler.DEVICE_POOL.get(device);
-            }else {
+            } else {
                 singlePool = new SinglePool();
                 singlePool.setDevice(device);
                 DataProcessHandler.DEVICE_POOL.put(device, singlePool);
             }
             // 实时下发
-            singlePool.getPool().addFirst(bytes);
+            singlePool.getPool().addFirst(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void init(){
+    public void init() {
         service.execute(() -> {
-            try(Jedis jedis = jedisPool.getResource()){
+            try (Jedis jedis = jedisPool.getResource()) {
                 log.info("订阅 Redis 频道[{}]", subChannel);
 
                 jedis.subscribe(this, subChannel);
