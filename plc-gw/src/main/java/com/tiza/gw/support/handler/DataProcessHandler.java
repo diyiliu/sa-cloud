@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.security.auth.Subject;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,11 +81,7 @@ public class DataProcessHandler {
                     ctx.writeAndFlush(Unpooled.copiedBuffer(bytes));
                 } else {
                     log.warn("设备[{}]指令过期[{{}, {}]", deviceId, DateUtil.dateToString(new Date(msg.getTime())), JacksonUtil.toJson(msg));
-                }
-
-                while (!queue.isEmpty()) {
-                    msg = queue.poll();
-                    log.warn("设备[{}]清理历史数据[{}]", deviceId, JacksonUtil.toJson(msg));
+                    queue.clear();
                 }
             }
         }
