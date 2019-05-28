@@ -78,7 +78,7 @@ public class DtuDataProcess implements Runnable {
                 String bytesStr = (String) dataMap.get("data");
                 byte[] bytes = CommonUtil.hexStringToBytes(bytesStr);
 
-                if (!deviceCacheProvider.containsKey(device)){
+                if (!deviceCacheProvider.containsKey(device)) {
                     log.warn("设备[{}]未注册", device);
                     continue;
                 }
@@ -91,19 +91,28 @@ public class DtuDataProcess implements Runnable {
                 // 上行
                 if (1 == flow) {
                     onlineCacheProvider.put(device, time);
+                    MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(device);
 
                     // 心跳、注册包
                     if (bytesStr.startsWith("404040") || bytesStr.startsWith("242424")) {
-                        log.info("设备上线: [{}]", bytesStr);
+                        log.info("设备[{}]上线: [{}]", device, bytesStr);
+
+                        if (msgMemory != null) {
+                            SendMsg sendMsg = msgMemory.getCurrent();
+                            if (sendMsg != null && sendMsg.getResult() == 0) {
+                                log.warn("设备[{}]丢弃未应答指令[{}]", device, CommonUtil.bytesToStr(sendMsg.getBytes()));
+                                sendMsg.setResult(1);
+                            }
+                        }
+
                         continue;
                     }
 
-                    if (!sendCacheProvider.containsKey(device)) {
-                        continue;
-                    }
                     // log.info("设备[{}]收到数据: [{}]", device, bytesStr);
+                    if (msgMemory == null) {
+                        continue;
+                    }
 
-                    MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(device);
                     SendMsg sendMsg = msgMemory.getCurrent();
                     if (sendMsg == null || sendMsg.getResult() == 1) {
                         log.warn("忽略设备[{}]过期数据[{}]", device, bytesStr);
@@ -144,6 +153,9 @@ public class DtuDataProcess implements Runnable {
                                     device, CommonUtil.bytesToStr(sendMsg.getBytes()), bytesStr);
                             continue;
                         }
+                        // 耗时
+                        double t = (System.currentTimeMillis() - sendMsg.getDateTime()) * 0.001;
+                        log.info("设备[{}]匹配[{}]成功, 响应时间[{}]秒, 指令内容[{}-{}]", device, sendMsg.getKey(), t, CommonUtil.bytesToStr(sendMsg.getBytes()), bytesStr);
                         // 修改下发消息状态
                         sendMsg.setResult(1);
 

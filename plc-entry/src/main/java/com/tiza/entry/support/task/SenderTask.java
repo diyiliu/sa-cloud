@@ -188,11 +188,13 @@ public class SenderTask implements ITask, InitializingBean {
     private void publish(MsgPool pool) {
         final String deviceId = pool.getDeviceId();
         executor.execute(() -> {
-            JedisPool jedisPool = redisUtil.getPool();
-            try (Jedis jedis = jedisPool.getResource()) {
+            try {
                 Queue<SendMsg> msgPool = pool.getMsgQueue();
                 while (!msgPool.isEmpty()) {
-                    if (!isBlock(deviceId)) {
+                    if (isBlock(deviceId)) {
+                        // 阻塞休眠
+                        Thread.sleep(10000);
+                    }else {
                         SendMsg msg = msgPool.poll();
 
                         // 清除查询指令队列
@@ -201,35 +203,11 @@ public class SenderTask implements ITask, InitializingBean {
                             pool.getKeyList().remove(key);
                         }
 
-                        // 添加下发缓存
-                        MsgMemory msgMemory;
-                        if (sendCacheProvider.containsKey(deviceId)) {
-                            msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
-                        } else {
-                            msgMemory = new MsgMemory();
-                            msgMemory.setDeviceId(deviceId);
-                            sendCacheProvider.put(deviceId, msgMemory);
-                        }
-                        msg.setDateTime(System.currentTimeMillis());
-                        msgMemory.setCurrent(msg);
-
-                        SubMsg subMsg = new SubMsg();
-                        subMsg.setDevice(deviceId);
-                        subMsg.setKey(key);
-                        subMsg.setType(msg.getType());
-                        subMsg.setData(CommonUtil.bytesToStr(msg.getBytes()));
-                        subMsg.setTime(System.currentTimeMillis());
-
-                        String dataJson = JacksonUtil.toJson(subMsg);
-                        jedis.publish(pubChannel, dataJson);
-                        log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
-
-                        // 参数设置
-                        if (1 == msg.getType()) {
-                            updateLog(msg, 1, "");
-                        }
+                        // 发布
+                        push(msg);
+                        // 响应间隔
+                        Thread.sleep(5000);
                     }
-                    Thread.sleep(3000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -238,6 +216,45 @@ public class SenderTask implements ITask, InitializingBean {
                 threadPool.remove(deviceId);
             }
         });
+    }
+
+    public void push(SendMsg msg) {
+        String deviceId = msg.getDeviceId();
+        String key = msg.getKey();
+        long now = System.currentTimeMillis();
+
+        JedisPool jedisPool = redisUtil.getPool();
+        try (Jedis jedis = jedisPool.getResource()) {
+
+            // 添加下发缓存
+            MsgMemory msgMemory;
+            if (sendCacheProvider.containsKey(deviceId)) {
+                msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
+            } else {
+                msgMemory = new MsgMemory();
+                msgMemory.setDeviceId(deviceId);
+                sendCacheProvider.put(deviceId, msgMemory);
+            }
+
+            msg.setDateTime(now);
+            msgMemory.setCurrent(msg);
+
+            SubMsg subMsg = new SubMsg();
+            subMsg.setDevice(deviceId);
+            subMsg.setKey(key);
+            subMsg.setType(msg.getType());
+            subMsg.setData(CommonUtil.bytesToStr(msg.getBytes()));
+            subMsg.setTime(now);
+
+            String dataJson = JacksonUtil.toJson(subMsg);
+            jedis.publish(pubChannel, dataJson);
+            // log.info("发布 Redis: [{}, {}, {}]", deviceId, key, subMsg.getData());
+
+            // 参数设置
+            if (1 == msg.getType()) {
+                updateLog(msg, 1, "");
+            }
+        }
     }
 
 
@@ -276,18 +293,19 @@ public class SenderTask implements ITask, InitializingBean {
             MsgMemory msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
             SendMsg current = msgMemory.getCurrent();
             if (current != null && current.getResult() == 0) {
+                int re = current.getRepeat();
+                if (re < 3) {
+                    push(current);
+                    log.warn("设备[{}]第[{}]次重发[{}] ... ", deviceId, re, current.getKey());
+                }
                 //  超时丢弃未应答指令
-                if (System.currentTimeMillis() - current.getDateTime() > 30 * 1000) {
-                    log.warn("设备[{}]丢弃超时未应答指令[{}]", deviceId, current.getKey());
-                    current.setResult(1);
+                else if (System.currentTimeMillis() - current.getDateTime() > 30 * 1000) {
                     if (current.getType() == 1) {
                         updateLog(current, 4, "");
+                        log.warn("设备[{}]参数设置超时[{}] ... ", deviceId, CommonUtil.bytesToStr(current.getBytes()));
                     }
-
-                    return false;
                 }
 
-                // log.info("设备[{}]阻塞[{}]等待中 ... ", deviceId, current.getKey());
                 return true;
             }
         }

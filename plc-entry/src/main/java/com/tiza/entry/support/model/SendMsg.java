@@ -3,6 +3,7 @@ package com.tiza.entry.support.model;
 import lombok.Data;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Description: SendMsg
@@ -40,4 +41,10 @@ public class SendMsg {
 
     /** 数据库指令下发id */
     private Long rowId;
+
+    private AtomicInteger repeat = new AtomicInteger(1);
+
+    public int getRepeat() {
+        return repeat.getAndIncrement();
+    }
 }

@@ -29,12 +29,11 @@ public class RedisMsgListener extends JedisPubSub {
 
     @Override
     public void onMessage(String channel, String message) {
-        log.info("准备下发消息: [{}]", message);
-
         try {
             SubMsg msg = JacksonUtil.toObject(message, SubMsg.class);
             String device = msg.getDevice();
 
+            log.info("设备[{}]准备下发消息[{}]", device, msg.getKey());
             SinglePool singlePool;
             if (DataProcessHandler.DEVICE_POOL.containsKey(device)) {
                 singlePool = DataProcessHandler.DEVICE_POOL.get(device);

@@ -16,4 +16,12 @@ public class TestMain {
         int i = CommonUtil.byte2int(bytes);
         System.out.println(Float.intBitsToFloat(i));
     }
+
+
+    @Test
+    public void test1(){
+        String str = "001F";
+        byte[] bytes = CommonUtil.hexStringToBytes(str);
+        System.out.println(CommonUtil.bytes2BinaryStr(bytes));
+    }
 }
