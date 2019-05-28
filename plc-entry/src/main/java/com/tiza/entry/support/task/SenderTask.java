@@ -278,8 +278,9 @@ public class SenderTask implements ITask, InitializingBean {
             pool.getKeyList().clear();
         }
 
-        String sql = "UPDATE equipment_info SET DtuStatus = 0, LastTime = ? WHERE EquipmentId = ?";
-        jdbcTemplate.update(sql, new Object[]{new Date(), deviceId});
+        // 设备离线由 mysql 事件自动检测
+        // String sql = "UPDATE equipment_info SET DtuStatus = 0, LastTime = ? WHERE EquipmentId = ?";
+        // jdbcTemplate.update(sql, new Object[]{new Date(), deviceId});
     }
 
     /**
