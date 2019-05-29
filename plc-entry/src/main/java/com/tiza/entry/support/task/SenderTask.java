@@ -194,7 +194,7 @@ public class SenderTask implements ITask, InitializingBean {
                     if (isBlock(deviceId)) {
                         // 阻塞休眠
                         Thread.sleep(10000);
-                    }else {
+                    } else {
                         SendMsg msg = msgPool.poll();
 
                         // 清除查询指令队列
@@ -223,19 +223,27 @@ public class SenderTask implements ITask, InitializingBean {
         String key = msg.getKey();
         long now = System.currentTimeMillis();
 
+        // 添加下发缓存
+        MsgMemory msgMemory;
+        if (sendCacheProvider.containsKey(deviceId)) {
+            msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
+        } else {
+            msgMemory = new MsgMemory();
+            msgMemory.setDeviceId(deviceId);
+            sendCacheProvider.put(deviceId, msgMemory);
+        }
+
+        SendMsg last = msgMemory.getCurrent();
+        if (last != null && last.fetchRepeat() > 1) {
+            if (badSimilar(last, msg)) {
+                log.warn("设备[{}]危险的延时查询指令, 取消本次行为[repeat: {}, before: {}, now: {}] ... ", deviceId, last.fetchRepeat(), last.getKey(), msg.getKey());
+                return;
+            }
+        }
+
+
         JedisPool jedisPool = redisUtil.getPool();
         try (Jedis jedis = jedisPool.getResource()) {
-
-            // 添加下发缓存
-            MsgMemory msgMemory;
-            if (sendCacheProvider.containsKey(deviceId)) {
-                msgMemory = (MsgMemory) sendCacheProvider.get(deviceId);
-            } else {
-                msgMemory = new MsgMemory();
-                msgMemory.setDeviceId(deviceId);
-                sendCacheProvider.put(deviceId, msgMemory);
-            }
-
             msg.setDateTime(now);
             msgMemory.setCurrent(msg);
 
@@ -333,7 +341,7 @@ public class SenderTask implements ITask, InitializingBean {
             // 时间间隔 秒
             double nowGap = System.currentTimeMillis() - msg.getDateTime() * 0.001;
             // 系统默认最大间隔
-            int max = 3 * 60;
+            int max = 10 * 60;
 
             interval = interval > max ? max : interval;
             if (nowGap < interval) {
@@ -360,6 +368,33 @@ public class SenderTask implements ITask, InitializingBean {
             sendLog.setReplyData(replyMsg);
             sendLogJpa.save(sendLog);
         }
+    }
+
+    /**
+     * 指令延时
+     * 造成相似指令解析异常
+     * (因为回复的指令中没有起始地址只有长度)
+     *
+     * @return
+     */
+    private boolean badSimilar(SendMsg msg1, SendMsg msg2) {
+        if (msg1.getKey().equals(msg2.getKey())) {
+
+            return false;
+        }
+
+        if (getSimilarKey(msg1.getKey()).equals(getSimilarKey(msg2.getKey()))) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private String getSimilarKey(String key) {
+        String[] strArray = key.split(":");
+
+        return strArray[0] + "-" + strArray[1] + "-" + strArray[3];
     }
 
     @Override

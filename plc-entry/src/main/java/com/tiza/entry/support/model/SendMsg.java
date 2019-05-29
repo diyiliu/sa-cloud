@@ -47,4 +47,9 @@ public class SendMsg {
     public int getRepeat() {
         return repeat.getAndIncrement();
     }
+
+    public int fetchRepeat(){
+
+        return repeat.get();
+    }
 }
