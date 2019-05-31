@@ -57,9 +57,6 @@ public class SenderTask implements ITask, InitializingBean {
     private SendLogJpa sendLogJpa;
 
     @Resource
-    private JdbcTemplate jdbcTemplate;
-
-    @Resource
     private ICache deviceCacheProvider;
 
     @Resource
@@ -378,6 +375,10 @@ public class SenderTask implements ITask, InitializingBean {
      * @return
      */
     private boolean badSimilar(SendMsg msg1, SendMsg msg2) {
+        if (StringUtils.isEmpty(msg1.getKey()) || StringUtils.isEmpty(msg2.getKey())){
+            return false;
+        }
+
         if (msg1.getKey().equals(msg2.getKey())) {
 
             return false;
