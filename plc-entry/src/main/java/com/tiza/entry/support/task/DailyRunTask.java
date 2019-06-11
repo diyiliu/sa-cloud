@@ -8,13 +8,13 @@ import com.tiza.entry.support.facade.dto.DailyHour;
 import com.tiza.entry.support.facade.dto.DeviceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.joda.time.DateTime;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -40,22 +40,18 @@ public class DailyRunTask implements ITask {
     @Resource
     private HBaseUtil hbaseUtil;
 
-    @Scheduled(cron = "0 30 1 * * ?")
+    @Scheduled(cron = "${cron.daily-run}")
     public void execute() {
         log.info("工作时长统计 ... ");
 
-        Calendar today = Calendar.getInstance();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(0);
-        calendar.set(Calendar.YEAR, today.get(Calendar.YEAR));
-        calendar.set(Calendar.MONTH, today.get(Calendar.MONTH));
-        calendar.set(Calendar.DAY_OF_MONTH, today.get(Calendar.DAY_OF_MONTH));
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        dealDaily(new Date());
+    }
 
-        long endTime = calendar.getTimeInMillis();
-        calendar.add(Calendar.DAY_OF_MONTH, -1);
-        long startTime = calendar.getTimeInMillis();
-
+    public void dealDaily(Date date) {
+        DateTime dt = new DateTime(date).withMillisOfDay(0);
+        long endTime = dt.getMillis();
+        dt = dt.minusDays(1);
+        long startTime = dt.getMillis();
 
         final String tag = "TotalRunTime";
         Set set = deviceCacheProvider.getKeys();

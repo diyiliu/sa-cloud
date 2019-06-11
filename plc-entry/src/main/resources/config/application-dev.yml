@@ -35,3 +35,6 @@ redis:
   channel: sa_channel
   equipment-info-key: 'sa:summery:'
   equipment-detail-key: 'sa:detail:'
+
+cron:
+  daily-run: 30 27 9 * * ?

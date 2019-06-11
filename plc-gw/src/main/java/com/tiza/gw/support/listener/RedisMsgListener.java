@@ -50,13 +50,13 @@ public class RedisMsgListener extends JedisPubSub {
     }
 
     public void init() {
-        service.execute(() -> {
-            try (Jedis jedis = jedisPool.getResource()) {
-                log.info("订阅 Redis 频道[{}]", subChannel);
-
-                jedis.subscribe(this, subChannel);
-            }
-        });
+//        service.execute(() -> {
+//            try (Jedis jedis = jedisPool.getResource()) {
+//                log.info("订阅 Redis 频道[{}]", subChannel);
+//
+//                jedis.subscribe(this, subChannel);
+//            }
+//        });
     }
 
     public void setJedisPool(JedisPool jedisPool) {

@@ -22,7 +22,7 @@ kafka:
   data-topic: shangair_metrics
 
 hbase:
-  zk-quorum: 192.168.1.111,192.168.1.112,192.168.1.113
+  zk-quorum: HighPressData01,HighPressData02,HighPressData03
   zk-port: 2181
   data-table: tcloud:shangair_metrics
 
@@ -34,3 +34,6 @@ redis:
   channel: sa_channel
   equipment-info-key: 'sa:summery:'
   equipment-detail-key: 'sa:detail:'
+
+cron:
+  daily-run: 30 27 9 * * ?

@@ -19,5 +19,5 @@ public class HBaseProperties {
 
     private String dataTable;
 
-//    private byte[] family = Bytes.toBytes("1");
+    private String family = "1";
 }

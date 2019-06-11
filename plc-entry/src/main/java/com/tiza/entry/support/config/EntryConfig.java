@@ -14,6 +14,7 @@ import kafka.producer.ProducerConfig;
 import kafka.serializer.StringEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -99,6 +100,7 @@ public class EntryConfig {
         HBaseUtil hbaseUtil = new HBaseUtil();
         hbaseUtil.setConfig(config);
         hbaseUtil.setTable(hbaseProperties.getDataTable());
+        hbaseUtil.setFamily(Bytes.toBytes(hbaseProperties.getFamily()));
 
         return hbaseUtil;
     }

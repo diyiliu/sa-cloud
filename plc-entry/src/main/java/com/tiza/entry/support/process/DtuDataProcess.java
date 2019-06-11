@@ -155,7 +155,7 @@ public class DtuDataProcess implements Runnable {
                         }
                         // 耗时
                         double t = (System.currentTimeMillis() - sendMsg.getDateTime()) * 0.001;
-                        log.info("设备[{}]匹配[{}]成功, 响应时间[{}]秒, 指令内容[{}-{}]", device, sendMsg.getKey(), t, CommonUtil.bytesToStr(sendMsg.getBytes()), bytesStr);
+                        // log.info("设备[{}]匹配[{}]成功, 响应时间[{}]秒, 指令内容[{}-{}]", device, sendMsg.getKey(), t, CommonUtil.bytesToStr(sendMsg.getBytes()), bytesStr);
                         // 修改下发消息状态
                         sendMsg.setResult(1);
 

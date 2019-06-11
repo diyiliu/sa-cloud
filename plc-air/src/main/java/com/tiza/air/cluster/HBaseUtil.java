@@ -1,10 +1,10 @@
 package com.tiza.air.cluster;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.QualifierFilter;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -56,12 +56,12 @@ public class HBaseUtil {
             TableName tableName = TableName.valueOf(table);
             Table table = connection.getTable(tableName);
 
-            Scan scan = new Scan().withStartRow(startRow).withStopRow(stopRow);
+            Scan scan = new Scan(startRow, stopRow);
             scan.addFamily(family);
 
             byte[] tagBytes = Bytes.toBytes(tag);
             FilterList qualifierFilters = new FilterList(FilterList.Operator.MUST_PASS_ONE);
-            qualifierFilters.addFilter(new QualifierFilter(CompareOperator.EQUAL, new BinaryComparator(tagBytes)));
+            qualifierFilters.addFilter(new QualifierFilter(CompareFilter.CompareOp.EQUAL, new BinaryComparator(tagBytes)));
             scan.setFilter(qualifierFilters);
 
             ResultScanner rs = table.getScanner(scan);
